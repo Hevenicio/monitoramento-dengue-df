@@ -1,0 +1,52 @@
+/// Cobertura nominal x observada por modelo, horizonte e nível
+table fato_cobertura
+	lineageTag: 4a95414e-647b-46b8-a2ae-603acf856ec4
+
+	column modelo
+		dataType: string
+		isHidden
+		lineageTag: 97cbea74-6205-4ac8-9a69-7138399a2828
+		summarizeBy: none
+		sourceColumn: modelo
+
+	column horizonte
+		dataType: int64
+		lineageTag: 3799e232-eb90-4733-a772-b6402ad462e4
+		summarizeBy: none
+		sourceColumn: horizonte
+
+	column nivel
+		dataType: int64
+		lineageTag: bde6944e-64d7-4bec-85cf-d84ca4385431
+		summarizeBy: none
+		sourceColumn: nivel
+
+	column cobertura_observada
+		dataType: double
+		formatString: 0%
+		lineageTag: 06c7eca0-8104-4b76-99f0-46c47aee4de1
+		summarizeBy: none
+		sourceColumn: cobertura_observada
+
+	column cobertura_nominal
+		dataType: double
+		formatString: 0%
+		lineageTag: 7aa9f494-2f0f-4688-9634-26ea3334da34
+		summarizeBy: none
+		sourceColumn: cobertura_nominal
+
+	column rotulo_nivel
+		dataType: string
+		lineageTag: 67f3d879-636a-41e0-9313-422e876ec753
+		summarizeBy: none
+		sourceColumn: rotulo_nivel
+		sortByColumn: nivel
+
+	partition fato_cobertura = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("fato_cobertura")
+				in
+				    Fonte
+

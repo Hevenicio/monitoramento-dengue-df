@@ -1,0 +1,461 @@
+// Medidas DAX do painel dengue-df (já incluídas em powerbi/painel_dengue.pbip).
+// Crie uma tabela só para as medidas: Modelagem > Nova tabela >  _Medidas = ROW ( "x", BLANK () )
+// Depois, com _Medidas selecionada, Modelagem > Nova medida e cole cada bloco (nome = expressão).
+// A linha "// formato:" diz o que escolher em Ferramentas de medida > Formato.
+//
+// Regra importante: quantis não se somam. A mediana e os limites de dois municípios não viram a
+// mediana e os limites do total. Por isso as medidas de previsão só devolvem valor quando o
+// contexto tem exatamente uma previsão (um município, um modelo, uma semana); fora disso ficam
+// em branco, em vez de mostrar um número errado.
+
+
+// ============================================================ série observada
+
+// formato: #,0
+Casos observados =
+SUM ( fato_observado[casos_usados] )
+
+// formato: #,0  (linha cheia do gráfico: semanas com notificação já consolidada)
+Linha observado consolidado =
+SUM ( fato_observado[casos_consolidados] )
+
+// formato: #,0  (linha tracejada: últimas semanas, estimadas pelo nowcasting do InfoDengue;
+// começa na última semana consolidada só para emendar as duas linhas)
+Linha nowcast =
+SUM ( fato_observado[linha_nowcast] )
+
+// formato: #,0.0
+Incidência por 100 mil hab =
+DIVIDE ( SUM ( fato_observado[casos_usados] ), SUM ( dim_municipio[populacao] ) ) * 100000
+
+// formato: #,0   (cartão "Última semana" da página Previsão por município)
+Casos na última semana =
+CALCULATE ( SUM ( fato_observado[casos_usados] ), dim_semana[semanas_desde_ultima] = 0 )
+
+// formato: 0%   (casos da última semana em % do limiar de alerta do município; 100% = no limiar)
+% do limiar (última semana) =
+DIVIDE ( [Casos na última semana], [Limiar de alerta (casos)] )
+
+// formato: 0%   (ranking "Mais perto do limiar de alerta" da Visão geral: só os 8 municípios mais
+// próximos do limiar; os demais ficam em branco e saem do gráfico). O visual agrupa também pela
+// coluna de classificação dim_municipio[ordem], por isso as duas colunas entram no ALL.
+% do limiar (8 maiores) =
+VAR atual = [% do limiar (última semana)]
+VAR acima =
+    COUNTROWS (
+        FILTER (
+            ALL ( dim_municipio[municipio], dim_municipio[ordem] ),
+            [% do limiar (última semana)] > atual
+        )
+    )
+RETURN IF ( NOT ISBLANK ( atual ) && acima < 8, atual )
+
+// cor das barras do ranking "Mais perto do limiar": cinza enquanto o município está longe do
+// limiar, laranja a partir de 75% e vermelho no limiar ou acima (só destaca o que pede atenção).
+// No visual: Formatação condicional > Cor > Formatar estilo "Valor do campo" > esta medida.
+Cor da proximidade (barra) =
+VAR p = [% do limiar (8 maiores)]
+RETURN
+    SWITCH ( TRUE (),
+        ISBLANK ( p ), BLANK (),
+        p >= 1, "#D03B3B",
+        p >= 0.75, "#EE8434",
+        "#8A8F98" )
+
+
+// ============================================================ previsão atual
+
+// auxiliar (oculte): verdadeiro quando o contexto tem uma única previsão
+_Uma previsão =
+COUNTROWS ( fato_previsao ) = 1
+
+// formato: #,0
+Previsão mediana =
+IF ( [_Uma previsão], SUM ( fato_previsao[mediana] ) )
+
+// formato: #,0
+Previsão IC 50% inferior =
+IF ( [_Uma previsão], SUM ( fato_previsao[li_50] ) )
+
+// formato: #,0
+Previsão IC 50% superior =
+IF ( [_Uma previsão], SUM ( fato_previsao[ls_50] ) )
+
+// formato: #,0
+Previsão IC 90% inferior =
+IF ( [_Uma previsão], SUM ( fato_previsao[li_90] ) )
+
+// formato: #,0
+Previsão IC 90% superior =
+IF ( [_Uma previsão], SUM ( fato_previsao[ls_90] ) )
+
+// formato: #,0
+Limiar de alerta (casos) =
+SELECTEDVALUE ( dim_municipio[limiar_casos] )
+
+// formato: 0%   (em branco na linha "Último observado", que não é previsão)
+Probabilidade de alerta =
+IF ( [_Uma previsão], SUM ( fato_previsao[prob_alerta] ) )
+
+// formato: 0%
+Probabilidade de alerta (próxima semana) =
+CALCULATE ( [Probabilidade de alerta], fato_previsao[horizonte] = 1 )
+
+// formato: 0%   (para ranquear municípios: maior probabilidade entre os horizontes 1 a 4)
+Maior probabilidade de alerta (4 semanas) =
+IF (
+    HASONEVALUE ( dim_modelo[modelo] ),
+    CALCULATE ( MAX ( fato_previsao[prob_alerta] ), fato_previsao[horizonte] >= 1 )
+)
+
+// formato: 0   (municípios com probabilidade de alerta >= 50% em algum dos horizontes filtrados)
+Municípios com alerta provável =
+IF (
+    HASONEVALUE ( dim_modelo[modelo] ),
+    CALCULATE (
+        DISTINCTCOUNT ( fato_previsao[geocode] ),
+        fato_previsao[horizonte] >= 1,
+        fato_previsao[prob_alerta] >= 0.5
+    ) + 0
+)
+
+// formato: #,0   (aproximação: soma das medianas; não existe intervalo válido para o total)
+Previsão total (soma das medianas) =
+IF ( HASONEVALUE ( dim_modelo[modelo] ), SUM ( fato_previsao[mediana] ) )
+
+// formato: +0%;-0%;0%   (casos previstos na região daqui a 4 semanas, soma das medianas, contra os da
+// última semana; aproximação, porque quantis não se somam)
+Variação prevista na região (4 semanas) =
+VAR atual = [Casos na última semana]
+VAR futuro = CALCULATE ( [Previsão total (soma das medianas)], fato_previsao[horizonte] = 4 )
+RETURN IF ( NOT ISBLANK ( futuro ) && atual > 0, DIVIDE ( futuro, atual ) - 1 )
+
+// formato: #,0
+Previsão próxima semana =
+CALCULATE ( [Previsão mediana], fato_previsao[horizonte] = 1 )
+
+// formato: #,0
+Casos previstos na região (próxima semana) =
+CALCULATE ( [Previsão total (soma das medianas)], fato_previsao[horizonte] = 1 )
+
+// cor de fundo da célula (matriz da Visão geral e coluna "Prob. alerta" da Previsão), pela faixa de
+// risco: baixo < 10%, moderado 10–25%, alto 25–50%, muito alto ≥ 50%. No visual: Formatação
+// condicional > Cor da tela de fundo > Formatar estilo "Valor do campo" > esta medida.
+Cor do risco (célula) =
+VAR p = [Probabilidade de alerta]
+RETURN
+    SWITCH ( TRUE (),
+        ISBLANK ( p ), BLANK (),
+        p >= 0.5, "#EC9A9A",
+        p >= 0.25, "#F7C3A9",
+        p >= 0.1, "#FDE3A7",
+        "#E3F4E3" )
+
+// formato: #,0   (limiar no gráfico da Previsão só quando cabe na escala: até 2 vezes o maior valor
+// das últimas 26 semanas e da previsão; acima disso ele esmagaria a curva e fica em branco)
+Limiar no gráfico =
+VAR lim = [Limiar de alerta (casos)]
+VAR semanas =
+    CALCULATETABLE (
+        VALUES ( dim_semana[inicio_semana] ),
+        REMOVEFILTERS ( dim_semana ),
+        dim_semana[semanas_desde_ultima] >= -26
+    )
+VAR topo = MAXX ( semanas, MAX ( [Casos observados], [Previsão IC 90% superior] ) )
+RETURN IF ( NOT ISBLANK ( lim ) && lim <= 2 * topo, lim )
+
+// cor por faixa de risco para barras (tons mais fortes que os das células): verde < 10%, amarelo
+// 10–25%, laranja 25–50%, vermelho ≥ 50%. Hoje sem uso: o ranking da Visão geral passou a mostrar a
+// proximidade do limiar, com barras cinza.
+Cor do risco (barra) =
+VAR p = [Maior probabilidade de alerta (4 semanas)]
+RETURN
+    SWITCH ( TRUE (),
+        ISBLANK ( p ), BLANK (),
+        p >= 0.5, "#D03B3B",
+        p >= 0.25, "#EE8434",
+        p >= 0.1, "#F2C14E",
+        "#49BF95" )
+
+// formato: #,0   (cópia da mediana usada só para desenhar a faixa de 50% no gráfico: cada série
+// de linha aceita uma faixa de erro; a mediana original carrega a de 90%)
+Previsão mediana (faixa 50%) =
+[Previsão mediana]
+
+
+// ============================================================ textos para cartões
+
+// aviso em vermelho no canto do gráfico da Previsão quando o limiar não é desenhado
+// (o espaço evita o "(Em branco)" do cartão)
+Aviso de limiar fora da escala =
+VAR lim = [Limiar de alerta (casos)]
+VAR semanas =
+    CALCULATETABLE (
+        VALUES ( dim_semana[inicio_semana] ),
+        REMOVEFILTERS ( dim_semana ),
+        dim_semana[semanas_desde_ultima] >= -26
+    )
+VAR topo = MAXX ( semanas, MAX ( [Casos observados], [Previsão IC 90% superior] ) )
+RETURN
+    IF (
+        NOT ISBLANK ( lim ) && lim > 2 * topo,
+        "Limiar de alerta (" & FORMAT ( lim, "#,0" ) & " casos) acima da escala",
+        " "
+    )
+
+Texto dados até =
+"Dados até a " & MAX ( info_execucao[rotulo_ultima_semana] )
+    & " (semana iniciada em " & FORMAT ( MAX ( info_execucao[ultima_semana] ), "dd/mm/yyyy" ) & ")"
+
+Texto próxima semana =
+VAR m = CALCULATE ( [Previsão mediana], fato_previsao[horizonte] = 1 )
+VAR li = CALCULATE ( [Previsão IC 90% inferior], fato_previsao[horizonte] = 1 )
+VAR ls = CALCULATE ( [Previsão IC 90% superior], fato_previsao[horizonte] = 1 )
+RETURN
+    IF (
+        ISBLANK ( m ),
+        "Escolha um município e um modelo",
+        FORMAT ( m, "#,0" ) & " casos (IC 90%: " & FORMAT ( li, "#,0" ) & " a " & FORMAT ( ls, "#,0" ) & ")"
+    )
+
+Texto temporadas de teste =
+"Temporadas de teste: " & MAX ( info_execucao[temporadas_teste] )
+
+Texto aviso de dados =
+IF (
+    MAX ( info_execucao[fonte] ) = "sintetico",
+    "DADOS SINTÉTICOS: não representam a dengue real",
+    "Fonte: InfoDengue e Mosqlimate"
+)
+
+// canto direito do cabeçalho de todas as páginas
+Texto cabeçalho =
+"Fonte: InfoDengue e Mosqlimate  ·  dados até a " & MAX ( info_execucao[rotulo_ultima_semana] )
+
+Texto semana dos dados =
+MAX ( info_execucao[rotulo_ultima_semana] )
+
+Texto semanas previstas =
+VAR i = CALCULATE ( MIN ( dim_semana[inicio_semana] ), REMOVEFILTERS ( dim_semana ), dim_semana[periodo] = "Previsão" )
+VAR f = CALCULATE ( MAX ( dim_semana[inicio_semana] ), REMOVEFILTERS ( dim_semana ), dim_semana[periodo] = "Previsão" )
+RETURN
+    LOOKUPVALUE ( dim_semana[rotulo_se], dim_semana[inicio_semana], i ) & " a "
+        & LOOKUPVALUE ( dim_semana[rotulo_se], dim_semana[inicio_semana], f )
+
+// município com a maior probabilidade de alerta nas próximas 4 semanas, para o modelo filtrado
+Texto maior risco =
+VAR t =
+    TOPN ( 1,
+        ADDCOLUMNS ( VALUES ( dim_municipio[municipio] ), "@p", [Maior probabilidade de alerta (4 semanas)] ),
+        [@p], DESC )
+VAR p = MAXX ( t, [@p] )
+RETURN IF ( ISBLANK ( p ), "–", FORMAT ( p, "0%" ) & "  ·  " & MAXX ( t, dim_municipio[municipio] ) )
+
+// cartão "Maior risco" da Visão geral: o número (5%) e, à parte, o rótulo com o município
+// (o rótulo de um cartão é fixo; este vai num segundo cartão sem fundo, por cima da linha do rótulo)
+Texto maior risco (valor) =
+VAR p = MAXX ( VALUES ( dim_municipio[municipio] ), [Maior probabilidade de alerta (4 semanas)] )
+RETURN IF ( ISBLANK ( p ), "–", FORMAT ( p, "0%" ) )
+
+Texto maior risco (rótulo) =
+VAR t =
+    TOPN ( 1,
+        ADDCOLUMNS ( VALUES ( dim_municipio[municipio] ), "@p", [Maior probabilidade de alerta (4 semanas)] ),
+        [@p], DESC )
+VAR m = MAXX ( t, dim_municipio[municipio] )
+RETURN IF ( ISBLANK ( MAXX ( t, [@p] ) ), "Maior risco", "Maior risco: " & m )
+
+// coluna "IC 90%" da tabela de próximas semanas
+Texto IC 90% =
+IF ( [_Uma previsão], FORMAT ( [Previsão IC 90% inferior], "#,0" ) & " – " & FORMAT ( [Previsão IC 90% superior], "#,0" ) )
+
+// cartão "Prob. de alerta +1 semana" da página Previsão, por exemplo "1%  ·  baixo"
+Texto prob. de alerta próxima semana =
+VAR p = [Probabilidade de alerta (próxima semana)]
+VAR faixa =
+    SWITCH ( TRUE (), p >= 0.5, "muito alto", p >= 0.25, "alto", p >= 0.1, "moderado", "baixo" )
+RETURN IF ( ISBLANK ( p ), "–", FORMAT ( p, "0%" ) & "  ·  " & faixa )
+
+// cartão de probabilidade da Previsão: o número (1%), com a cor da faixa, e o rótulo com a faixa
+Texto prob. de alerta (valor) =
+VAR p = [Probabilidade de alerta (próxima semana)]
+RETURN IF ( ISBLANK ( p ), "–", FORMAT ( p, "0%" ) )
+
+Texto prob. de alerta (rótulo) =
+VAR p = [Probabilidade de alerta (próxima semana)]
+VAR faixa =
+    SWITCH ( TRUE (), p >= 0.5, "muito alto", p >= 0.25, "alto", p >= 0.1, "moderado", "baixo" )
+RETURN IF ( ISBLANK ( p ), "Risco +1 semana", "Risco +1 semana: " & faixa )
+
+// cor da fonte do número acima (Valor do campo), em tons escuros o bastante para texto
+Cor do risco (texto) =
+VAR p = [Probabilidade de alerta (próxima semana)]
+RETURN
+    SWITCH ( TRUE (),
+        ISBLANK ( p ), "#1F2328",
+        p >= 0.5, "#C62828",
+        p >= 0.25, "#D9622B",
+        p >= 0.1, "#B7791F",
+        "#2E8B57" )
+
+// cartão "Variação prevista em 4 semanas" da Visão geral, por exemplo "▲ 25%"
+Texto variação prevista (4 semanas) =
+VAR v = [Variação prevista na região (4 semanas)]
+RETURN
+    SWITCH (
+        TRUE (),
+        ISBLANK ( v ), "–",
+        ROUND ( v, 2 ) = 0, "= 0%",
+        v > 0, "▲ " & FORMAT ( v, "0%" ),
+        "▼ " & FORMAT ( -v, "0%" )
+    )
+
+Texto IC 90% próxima semana =
+VAR li = CALCULATE ( [Previsão IC 90% inferior], fato_previsao[horizonte] = 1 )
+VAR ls = CALCULATE ( [Previsão IC 90% superior], fato_previsao[horizonte] = 1 )
+RETURN
+    SWITCH ( TRUE (),
+        ISBLANK ( li ), "–",
+        // a partir de mil casos, em milhares ("4,5 – 8,9 mil"), para caber no cartão
+        ls >= 1000, FORMAT ( li / 1000, "#,0.0" ) & " – " & FORMAT ( ls / 1000, "#,0.0" ) & " mil",
+        FORMAT ( li, "#,0" ) & " – " & FORMAT ( ls, "#,0" ) )
+
+
+// ============================================================ backtest (desempenho)
+// Use dim_modelo[modelo_nome] e fato_backtest[horizonte] nos visuais. As médias abaixo, por
+// modelo e horizonte, reproduzem a tabela que `executar` imprime (fato_resumo).
+
+// formato: #,0.0
+Backtest WIS (casos) =
+AVERAGE ( fato_backtest[wis] )
+
+// formato: 0.000
+Backtest WIS (log) =
+AVERAGE ( fato_backtest[wis_log] )
+
+// formato: 0.00   (abaixo de 1 = melhor que a climatologia)
+Backtest WIS relativo à climatologia =
+DIVIDE (
+    [Backtest WIS (log)],
+    CALCULATE ( [Backtest WIS (log)], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "climatologia" )
+)
+
+// formato: #,0.0
+Backtest erro absoluto da mediana =
+AVERAGE ( fato_backtest[erro_abs_mediana] )
+
+// formato: 0%
+Backtest cobertura IC 50% =
+AVERAGE ( fato_backtest[cobre_50] )
+
+// formato: 0%
+Backtest cobertura IC 80% =
+AVERAGE ( fato_backtest[cobre_80] )
+
+// formato: 0%
+Backtest cobertura IC 90% =
+AVERAGE ( fato_backtest[cobre_90] )
+
+// formato: 0%
+Backtest cobertura IC 95% =
+AVERAGE ( fato_backtest[cobre_95] )
+
+// formato: 0.000   (erro quadrático da probabilidade de alerta; menor é melhor)
+Backtest Brier do alerta =
+AVERAGE ( fato_backtest[brier] )
+
+// formato: #,0
+Backtest previsões avaliadas =
+COUNT ( fato_backtest[wis] )
+
+// As quatro abaixo são para o gráfico previsto x observado: exigem um município, um modelo
+// e um horizonte (com a semana no eixo, sobra uma linha por ponto).
+
+// formato: #,0
+Backtest observado =
+IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[observado] ) )
+
+// formato: #,0
+Backtest mediana prevista =
+IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[mediana] ) )
+
+// formato: #,0
+Backtest IC 90% inferior =
+IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[li_90] ) )
+
+// formato: #,0
+Backtest IC 90% superior =
+IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[ls_90] ) )
+
+// formato: #,0
+Backtest IC 50% inferior =
+IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[li_50] ) )
+
+// formato: #,0
+Backtest IC 50% superior =
+IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[ls_50] ) )
+
+// formato: #,0   (cópia da mediana só para desenhar a faixa de 50%, como na previsão)
+Backtest mediana (faixa 50%) =
+[Backtest mediana prevista]
+
+
+// ============================================================ cobertura (calibração)
+
+// formato: 0%
+Cobertura observada =
+AVERAGE ( fato_cobertura[cobertura_observada] )
+
+// formato: 0%
+Cobertura nominal =
+AVERAGE ( fato_cobertura[cobertura_nominal] )
+
+// Uma medida por modelo, para os gráficos de calibração (eixo X contínuo, uma linha por modelo,
+// mais a diagonal "Ideal"). Os códigos vêm de dim_modelo[modelo].
+
+// formato: 0%
+Cobertura GBM quantílico =
+CALCULATE ( [Cobertura observada], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "gbm_quantilico" )
+
+// formato: 0%
+Cobertura Crescimento sazonal =
+CALCULATE ( [Cobertura observada], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "crescimento" )
+
+// formato: 0%
+Cobertura Climatologia =
+CALCULATE ( [Cobertura observada], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "climatologia" )
+
+// Diagrama de confiabilidade do alerta: X = fato_confiabilidade[faixa_centro] (coluna calculada abaixo)
+
+// formato: 0%
+Alerta observado GBM quantílico =
+CALCULATE ( AVERAGE ( fato_confiabilidade[freq_observada] ), REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "gbm_quantilico" )
+
+// formato: 0%
+Alerta observado Crescimento sazonal =
+CALCULATE ( AVERAGE ( fato_confiabilidade[freq_observada] ), REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "crescimento" )
+
+// formato: 0%
+Alerta observado Climatologia =
+CALCULATE ( AVERAGE ( fato_confiabilidade[freq_observada] ), REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "climatologia" )
+
+// formato: 0%   (diagonal: probabilidade prevista = frequência observada)
+Calibração perfeita (alerta) =
+AVERAGE ( fato_confiabilidade[faixa_centro] )
+
+
+// ============================================================ colunas calculadas (fato_confiabilidade)
+// Modelagem > Nova coluna, com fato_confiabilidade selecionada. A coluna `faixa` vem do Python como
+// intervalo do pandas: a primeira começa com "(-" e as demais são "(0.1, 0.2]", "(0.2, 0.3]", ...
+
+// oculte; faixa de 1 a 10
+faixa_ordem =
+IF ( LEFT ( fato_confiabilidade[faixa], 2 ) = "(-", 1, VALUE ( MID ( fato_confiabilidade[faixa], 4, 1 ) ) + 1 )
+
+// formato: 0%
+faixa_centro =
+( fato_confiabilidade[faixa_ordem] - 0.5 ) / 10
+
+// classificar por faixa_ordem
+faixa_rotulo =
+FORMAT ( ( fato_confiabilidade[faixa_ordem] - 1 ) / 10, "0%" ) & "–" & FORMAT ( fato_confiabilidade[faixa_ordem] / 10, "0%" )

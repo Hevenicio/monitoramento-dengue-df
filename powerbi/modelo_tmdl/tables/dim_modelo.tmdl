@@ -1,0 +1,38 @@
+/// Modelos de previsão; ordem fixa a cor nas legendas
+table dim_modelo
+	lineageTag: ddaaed96-837f-48a7-93c7-e44fa6e4775f
+
+	column modelo
+		dataType: string
+		isKey
+		lineageTag: 4e1afeea-0c76-4697-ab03-2cceea9840ad
+		summarizeBy: none
+		sourceColumn: modelo
+
+	column modelo_nome
+		dataType: string
+		lineageTag: 04cee7c2-31ec-4e24-bbc0-bf21a9e52fda
+		summarizeBy: none
+		sourceColumn: modelo_nome
+		sortByColumn: ordem
+
+	column ordem
+		dataType: int64
+		lineageTag: 5da43e1a-9393-4505-9f8f-335e85056116
+		summarizeBy: none
+		sourceColumn: ordem
+
+	column descricao
+		dataType: string
+		lineageTag: de563954-6482-4c4e-b542-95e35235b6cd
+		summarizeBy: none
+		sourceColumn: descricao
+
+	partition dim_modelo = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("dim_modelo")
+				in
+				    Fonte
+

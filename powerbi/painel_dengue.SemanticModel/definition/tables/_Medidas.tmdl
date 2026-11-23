@@ -1,0 +1,500 @@
+/// Medidas do painel (ver powerbi/medidas.dax)
+table _Medidas
+	lineageTag: 265002e6-77f1-4984-87bb-c2f9a9900ea2
+
+	measure 'Casos observados' = SUM ( fato_observado[casos_usados] )
+		formatString: #,0
+		displayFolder: 1 Observado
+		lineageTag: ab1d6a15-aa8c-4157-a151-15ef386f1f73
+
+	measure 'Linha observado consolidado' = SUM ( fato_observado[casos_consolidados] )
+		formatString: #,0
+		displayFolder: 1 Observado
+		lineageTag: 802d6107-56ca-44c7-b1c4-37400b77ade4
+
+	measure 'Linha nowcast' = SUM ( fato_observado[linha_nowcast] )
+		formatString: #,0
+		displayFolder: 1 Observado
+		lineageTag: 78017bd5-5300-474e-9be8-b1abc4fa49da
+
+	measure 'Incidência por 100 mil hab' = DIVIDE ( SUM ( fato_observado[casos_usados] ), SUM ( dim_municipio[populacao] ) ) * 100000
+		formatString: #,0.0
+		displayFolder: 1 Observado
+		lineageTag: 4fb224f0-cb80-454c-9c76-0471383c451f
+
+	measure '_Uma previsão' = COUNTROWS ( fato_previsao ) = 1
+		isHidden
+		displayFolder: 2 Previsão
+		lineageTag: 81a4b926-faa6-4cfb-8c8e-d7194423df8a
+
+	measure 'Previsão mediana' = IF ( [_Uma previsão], SUM ( fato_previsao[mediana] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 2ee4a2c6-d00c-4543-837e-920e2fcbc7be
+
+	measure 'Previsão IC 50% inferior' = IF ( [_Uma previsão], SUM ( fato_previsao[li_50] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 815414bf-2ba6-441e-a240-95b5d157b7de
+
+	measure 'Previsão IC 50% superior' = IF ( [_Uma previsão], SUM ( fato_previsao[ls_50] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 57381a6b-1c43-4a57-b189-35cbd8ba0e7b
+
+	measure 'Previsão IC 90% inferior' = IF ( [_Uma previsão], SUM ( fato_previsao[li_90] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: eff4b560-11e5-4f23-bfd1-f2f7bcfe7f87
+
+	measure 'Previsão IC 90% superior' = IF ( [_Uma previsão], SUM ( fato_previsao[ls_90] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 9329e2d4-1f1b-40ec-a851-c23546a0b3e3
+
+	measure 'Limiar de alerta (casos)' = SELECTEDVALUE ( dim_municipio[limiar_casos] )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 708d69c3-3b0f-4e1f-8d4f-c6ab70e3ef52
+
+	measure 'Probabilidade de alerta' = IF ( [_Uma previsão], SUM ( fato_previsao[prob_alerta] ) )
+		formatString: 0%
+		displayFolder: 2 Previsão
+		lineageTag: e00e8177-7a4c-4c37-8bb4-a79df8ae23d1
+
+	measure 'Probabilidade de alerta (próxima semana)' = CALCULATE ( [Probabilidade de alerta], fato_previsao[horizonte] = 1 )
+		formatString: 0%
+		displayFolder: 2 Previsão
+		lineageTag: 0bbdd98f-56a4-40a2-a9e6-681849be6dd9
+
+	measure 'Maior probabilidade de alerta (4 semanas)' =
+			IF (
+			    HASONEVALUE ( dim_modelo[modelo] ),
+			    CALCULATE ( MAX ( fato_previsao[prob_alerta] ), fato_previsao[horizonte] >= 1 )
+			)
+		formatString: 0%
+		displayFolder: 2 Previsão
+		lineageTag: eda8f112-1291-4011-a05c-faf76dbfaca2
+
+	measure 'Municípios com alerta provável' =
+			IF (
+			    HASONEVALUE ( dim_modelo[modelo] ),
+			    CALCULATE (
+			        DISTINCTCOUNT ( fato_previsao[geocode] ),
+			        fato_previsao[horizonte] >= 1,
+			        fato_previsao[prob_alerta] >= 0.5
+			    ) + 0
+			)
+		formatString: 0
+		displayFolder: 2 Previsão
+		lineageTag: dccba6e0-78a5-4d7c-996a-e4db20ef6023
+
+	measure 'Previsão total (soma das medianas)' = IF ( HASONEVALUE ( dim_modelo[modelo] ), SUM ( fato_previsao[mediana] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: bf65d3e8-9c21-4c30-a3d3-68208e5f602b
+
+	measure 'Texto dados até' =
+			"Dados até a " & MAX ( info_execucao[rotulo_ultima_semana] )
+			    & " (semana iniciada em " & FORMAT ( MAX ( info_execucao[ultima_semana] ), "dd/mm/yyyy" ) & ")"
+		displayFolder: 3 Textos
+		lineageTag: 474f6ed8-2ec7-4586-8267-3e7817c801dd
+
+	measure 'Texto próxima semana' =
+			VAR m = CALCULATE ( [Previsão mediana], fato_previsao[horizonte] = 1 )
+			VAR li = CALCULATE ( [Previsão IC 90% inferior], fato_previsao[horizonte] = 1 )
+			VAR ls = CALCULATE ( [Previsão IC 90% superior], fato_previsao[horizonte] = 1 )
+			RETURN
+			    IF (
+			        ISBLANK ( m ),
+			        "Escolha um município e um modelo",
+			        FORMAT ( m, "#,0" ) & " casos (IC 90%: " & FORMAT ( li, "#,0" ) & " a " & FORMAT ( ls, "#,0" ) & ")"
+			    )
+		displayFolder: 3 Textos
+		lineageTag: bd55aebf-9667-4c9c-829f-7235a03f14b6
+
+	measure 'Texto aviso de dados' =
+			IF (
+			    MAX ( info_execucao[fonte] ) = "sintetico",
+			    "DADOS SINTÉTICOS: não representam a dengue real",
+			    "Fonte: InfoDengue e Mosqlimate"
+			)
+		displayFolder: 3 Textos
+		lineageTag: af8fc6b0-b5a9-4fff-a9d5-e782353956c2
+
+	measure 'Backtest WIS (casos)' = AVERAGE ( fato_backtest[wis] )
+		formatString: #,0.0
+		displayFolder: 4 Backtest
+		lineageTag: 19329f0c-b30f-4189-a800-e3037c11f318
+
+	measure 'Backtest WIS (log)' = AVERAGE ( fato_backtest[wis_log] )
+		formatString: 0.000
+		displayFolder: 4 Backtest
+		lineageTag: 430f6b9e-8459-48d7-8ac6-fc72524bba3f
+
+	measure 'Backtest WIS relativo à climatologia' =
+			DIVIDE (
+			    [Backtest WIS (log)],
+			    CALCULATE ( [Backtest WIS (log)], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "climatologia" )
+			)
+		formatString: 0.00
+		displayFolder: 4 Backtest
+		lineageTag: 7721bd8c-c66a-4381-997a-006f9dc73a05
+
+	measure 'Backtest erro absoluto da mediana' = AVERAGE ( fato_backtest[erro_abs_mediana] )
+		formatString: #,0.0
+		displayFolder: 4 Backtest
+		lineageTag: aed586f4-5795-4f6e-ad06-6e257e11c01f
+
+	measure 'Backtest cobertura IC 50%' = AVERAGE ( fato_backtest[cobre_50] )
+		formatString: 0%
+		displayFolder: 4 Backtest
+		lineageTag: e0cf5327-695a-41f1-a794-ff689abd257e
+
+	measure 'Backtest cobertura IC 80%' = AVERAGE ( fato_backtest[cobre_80] )
+		formatString: 0%
+		displayFolder: 4 Backtest
+		lineageTag: 62dc6ad2-026d-4a49-a16c-b261733131c8
+
+	measure 'Backtest cobertura IC 90%' = AVERAGE ( fato_backtest[cobre_90] )
+		formatString: 0%
+		displayFolder: 4 Backtest
+		lineageTag: c58df55b-cc41-412e-9d4e-7bbb24d11dfe
+
+	measure 'Backtest cobertura IC 95%' = AVERAGE ( fato_backtest[cobre_95] )
+		formatString: 0%
+		displayFolder: 4 Backtest
+		lineageTag: b2f8fef0-6fd6-44f4-8273-d0ebb0a57889
+
+	measure 'Backtest Brier do alerta' = AVERAGE ( fato_backtest[brier] )
+		formatString: 0.000
+		displayFolder: 4 Backtest
+		lineageTag: 66329154-41ca-46f3-a3a8-974fb42596c2
+
+	measure 'Backtest previsões avaliadas' = COUNT ( fato_backtest[wis] )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: 03cc164c-11cd-46c8-81bd-f3eaf7e4d896
+
+	measure 'Backtest observado' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[observado] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: b2d49b4f-b2db-4746-a115-6cc102d065b3
+
+	measure 'Backtest mediana prevista' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[mediana] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: 5d34ba9e-4544-45da-948e-12c6f930ba57
+
+	measure 'Backtest IC 90% inferior' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[li_90] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: a23a1d2a-3aeb-4a35-a2fd-0297ea14bf6a
+
+	measure 'Backtest IC 90% superior' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[ls_90] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: d067175e-02bd-4267-859b-adcf7538713c
+
+	measure 'Cobertura observada' = AVERAGE ( fato_cobertura[cobertura_observada] )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: a5049999-6ae4-4b19-b930-e3725ae4fcd2
+
+	measure 'Cobertura nominal' = AVERAGE ( fato_cobertura[cobertura_nominal] )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: 03458525-1450-4d45-98a4-3146c32d928f
+
+	measure 'Texto temporadas de teste' = "Temporadas de teste: " & MAX ( info_execucao[temporadas_teste] )
+		displayFolder: 3 Textos
+		lineageTag: 75267e0d-2743-47cb-9375-bae55bba3feb
+
+	measure 'Casos na última semana' = CALCULATE ( SUM ( fato_observado[casos_usados] ), dim_semana[semanas_desde_ultima] = 0 )
+		formatString: #,0
+		displayFolder: 1 Observado
+		lineageTag: b7342bcf-8cb1-46b1-9494-f34d92abc0a1
+
+	measure 'Previsão próxima semana' = CALCULATE ( [Previsão mediana], fato_previsao[horizonte] = 1 )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 714ae98d-fcb3-4b5a-a795-8422769be302
+
+	/// Cópia da mediana usada só para desenhar a faixa de 50% no gráfico
+	measure 'Previsão mediana (faixa 50%)' = [Previsão mediana]
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 4005f4a0-dd6a-4402-8b0c-78ae7a5bd798
+
+	measure 'Casos previstos na região (próxima semana)' = CALCULATE ( [Previsão total (soma das medianas)], fato_previsao[horizonte] = 1 )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 50f2d90d-9d03-442c-ba8c-3c85de0d062d
+
+	/// Intervalo de 90% da próxima semana; a partir de mil casos vira "4,5 – 8,9 mil" para caber no cartão
+	measure 'Texto IC 90% próxima semana' =
+			VAR li = CALCULATE ( [Previsão IC 90% inferior], fato_previsao[horizonte] = 1 )
+			VAR ls = CALCULATE ( [Previsão IC 90% superior], fato_previsao[horizonte] = 1 )
+			RETURN
+			    SWITCH ( TRUE (),
+			        ISBLANK ( li ), "–",
+			        ls >= 1000, FORMAT ( li / 1000, "#,0.0" ) & " – " & FORMAT ( ls / 1000, "#,0.0" ) & " mil",
+			        FORMAT ( li, "#,0" ) & " – " & FORMAT ( ls, "#,0" ) )
+		displayFolder: 3 Textos
+		lineageTag: 7d3e748f-2a97-4177-9a32-ecf635b65860
+
+	measure 'Texto maior risco' =
+			VAR t =
+			    TOPN ( 1,
+			        ADDCOLUMNS ( VALUES ( dim_municipio[municipio] ), "@p", [Maior probabilidade de alerta (4 semanas)] ),
+			        [@p], DESC )
+			VAR p = MAXX ( t, [@p] )
+			RETURN IF ( ISBLANK ( p ), "–", FORMAT ( p, "0%" ) & "  ·  " & MAXX ( t, dim_municipio[municipio] ) )
+		displayFolder: 3 Textos
+		lineageTag: 9f5e50f1-b086-4183-8c66-2f43856943d6
+
+	measure 'Texto semana dos dados' = MAX ( info_execucao[rotulo_ultima_semana] )
+		displayFolder: 3 Textos
+		lineageTag: e6992d6d-d700-4f7c-aaf7-d2d1d4bef4fe
+
+	measure 'Cobertura GBM quantílico' = CALCULATE ( [Cobertura observada], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "gbm_quantilico" )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: 25ad1a85-20ee-4afb-a83f-8658b27642b2
+
+	measure 'Cobertura Crescimento sazonal' = CALCULATE ( [Cobertura observada], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "crescimento" )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: b3dc1c9a-5e15-4913-885b-3da4911a49b7
+
+	measure 'Cobertura Climatologia' = CALCULATE ( [Cobertura observada], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "climatologia" )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: 372e97bc-6064-434f-a6d0-3a5df4d0a6d4
+
+	measure 'Alerta observado GBM quantílico' = CALCULATE ( AVERAGE ( fato_confiabilidade[freq_observada] ), REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "gbm_quantilico" )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: 67fd4b0d-e2ee-448c-9e1c-40943a7b8164
+
+	measure 'Alerta observado Crescimento sazonal' = CALCULATE ( AVERAGE ( fato_confiabilidade[freq_observada] ), REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "crescimento" )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: b2d152d9-cb1d-4e0f-a0cf-9d8a3c17f644
+
+	measure 'Alerta observado Climatologia' = CALCULATE ( AVERAGE ( fato_confiabilidade[freq_observada] ), REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "climatologia" )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: 31310f57-93c1-40fa-858b-57caa89e4da6
+
+	measure 'Calibração perfeita (alerta)' = AVERAGE ( fato_confiabilidade[faixa_centro] )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: 2d307128-f5ce-433c-ba39-76cbaac17e00
+
+	measure 'Backtest IC 50% inferior' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[li_50] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: dbbaf233-0c43-4eb1-a751-4742d161bb04
+
+	measure 'Backtest IC 50% superior' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[ls_50] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: 6ff0b602-17c0-42dc-8e91-598ea5494549
+
+	/// Cópia da mediana usada só para desenhar a faixa de 50% no gráfico
+	measure 'Backtest mediana (faixa 50%)' = [Backtest mediana prevista]
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: 7d89e316-e043-4f4c-a27f-5f867bdaef0b
+
+	measure 'Texto cabeçalho' = "Fonte: InfoDengue e Mosqlimate  ·  dados até a " & MAX ( info_execucao[rotulo_ultima_semana] )
+		displayFolder: 3 Textos
+		lineageTag: dfc9d9c7-2251-4532-8bc8-c3cc6e4a8d8c
+
+	measure 'Texto semanas previstas' =
+			VAR i = CALCULATE ( MIN ( dim_semana[inicio_semana] ), REMOVEFILTERS ( dim_semana ), dim_semana[periodo] = "Previsão" )
+			VAR f = CALCULATE ( MAX ( dim_semana[inicio_semana] ), REMOVEFILTERS ( dim_semana ), dim_semana[periodo] = "Previsão" )
+			RETURN
+			    LOOKUPVALUE ( dim_semana[rotulo_se], dim_semana[inicio_semana], i ) & " a "
+			        & LOOKUPVALUE ( dim_semana[rotulo_se], dim_semana[inicio_semana], f )
+		displayFolder: 3 Textos
+		lineageTag: e16748ae-8b40-4399-8555-042470b072cd
+
+	measure 'Texto IC 90%' = IF ( [_Uma previsão], FORMAT ( [Previsão IC 90% inferior], "#,0" ) & " – " & FORMAT ( [Previsão IC 90% superior], "#,0" ) )
+		displayFolder: 3 Textos
+		lineageTag: 18815596-2572-4d2d-ab13-0620801a1c69
+
+	/// Cor de fundo da célula pela faixa de risco da probabilidade de alerta: baixo < 10%, moderado 10–25%, alto 25–50%, muito alto ≥ 50%
+	measure 'Cor do risco (célula)' =
+			VAR p = [Probabilidade de alerta]
+			RETURN
+			    SWITCH ( TRUE (),
+			        ISBLANK ( p ), BLANK (),
+			        p >= 0.5, "#EC9A9A",
+			        p >= 0.25, "#F7C3A9",
+			        p >= 0.1, "#FDE3A7",
+			        "#E3F4E3" )
+		displayFolder: 2 Previsão
+		lineageTag: 8e472d3a-7bfd-4888-ae33-0c9efabd6c33
+
+	/// Probabilidade de alerta na próxima semana com a faixa de risco por extenso
+	measure 'Texto prob. de alerta próxima semana' =
+			VAR p = [Probabilidade de alerta (próxima semana)]
+			VAR faixa =
+			    SWITCH ( TRUE (), p >= 0.5, "muito alto", p >= 0.25, "alto", p >= 0.1, "moderado", "baixo" )
+			RETURN IF ( ISBLANK ( p ), "–", FORMAT ( p, "0%" ) & "  ·  " & faixa )
+		displayFolder: 3 Textos
+		lineageTag: d4eecb6e-6d0b-47ae-a55b-b3f2a75f1885
+
+	/// Casos previstos na região daqui a 4 semanas (soma das medianas) em relação aos casos da última semana. Aproximação: quantis não se somam.
+	measure 'Variação prevista na região (4 semanas)' =
+			VAR atual = [Casos na última semana]
+			VAR futuro = CALCULATE ( [Previsão total (soma das medianas)], fato_previsao[horizonte] = 4 )
+			RETURN IF ( NOT ISBLANK ( futuro ) && atual > 0, DIVIDE ( futuro, atual ) - 1 )
+		formatString: +0%;-0%;0%
+		displayFolder: 2 Previsão
+		lineageTag: f15d4fc8-55c4-4d7f-a551-ee84a602be92
+
+	/// Variação prevista na região em 4 semanas com seta de direção, para o cartão da Visão geral
+	measure 'Texto variação prevista (4 semanas)' =
+			VAR v = [Variação prevista na região (4 semanas)]
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( v ), "–",
+			        ROUND ( v, 2 ) = 0, "= 0%",
+			        v > 0, "▲ " & FORMAT ( v, "0%" ),
+			        "▼ " & FORMAT ( -v, "0%" )
+			    )
+		displayFolder: 3 Textos
+		lineageTag: 638e19c2-ee9e-4606-8196-12a5fe8ea66b
+
+	/// Cor da barra do ranking pela faixa de risco da maior probabilidade de alerta em 4 semanas: baixo < 10% (verde), moderado 10–25% (amarelo), alto 25–50% (laranja), muito alto ≥ 50% (vermelho)
+	measure 'Cor do risco (barra)' =
+			VAR p = [Maior probabilidade de alerta (4 semanas)]
+			RETURN
+			    SWITCH ( TRUE (),
+			        ISBLANK ( p ), BLANK (),
+			        p >= 0.5, "#D03B3B",
+			        p >= 0.25, "#EE8434",
+			        p >= 0.1, "#F2C14E",
+			        "#49BF95" )
+		displayFolder: 2 Previsão
+		lineageTag: 694d2aa4-7292-4c6c-841e-92019c5737bf
+
+	/// Casos da última semana divididos pelo limiar de alerta do município (100% = no limiar)
+	measure '% do limiar (última semana)' = DIVIDE ( [Casos na última semana], [Limiar de alerta (casos)] )
+		formatString: 0%
+		displayFolder: 1 Observado
+		lineageTag: 827b9e51-d446-4fe7-9151-78393513b0cd
+
+	/// % do limiar só para os 8 municípios mais próximos dele (os demais ficam em branco e saem do gráfico)
+	measure '% do limiar (8 maiores)' =
+			-- o visual agrupa também por dim_municipio[ordem] (coluna de classificação), por isso as duas colunas entram no ALL
+			VAR atual = [% do limiar (última semana)]
+			VAR acima =
+			    COUNTROWS (
+			        FILTER (
+			            ALL ( dim_municipio[municipio], dim_municipio[ordem] ),
+			            [% do limiar (última semana)] > atual
+			        )
+			    )
+			RETURN IF ( NOT ISBLANK ( atual ) && acima < 8, atual )
+		formatString: 0%
+		displayFolder: 1 Observado
+		lineageTag: 35cd5066-7ced-42f3-b10d-621ddd85a53b
+
+	/// Limiar de alerta só quando está na escala do gráfico (até 2 vezes o maior valor das últimas 26 semanas e da previsão); assim ele não esmaga a curva
+	measure 'Limiar no gráfico' =
+			VAR lim = [Limiar de alerta (casos)]
+			VAR semanas = CALCULATETABLE ( VALUES ( dim_semana[inicio_semana] ), REMOVEFILTERS ( dim_semana ), dim_semana[semanas_desde_ultima] >= -26 )
+			VAR topo = MAXX ( semanas, MAX ( [Casos observados], [Previsão IC 90% superior] ) )
+			RETURN IF ( NOT ISBLANK ( lim ) && lim <= 2 * topo, lim )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 63840c04-0c16-46a5-a6de-5a39eb4cfd08
+
+	/// Texto curto que aparece no gráfico da Previsão quando o limiar de alerta está acima da escala (e por isso não é desenhado)
+	measure 'Aviso de limiar fora da escala' =
+			VAR lim = [Limiar de alerta (casos)]
+			VAR semanas = CALCULATETABLE ( VALUES ( dim_semana[inicio_semana] ), REMOVEFILTERS ( dim_semana ), dim_semana[semanas_desde_ultima] >= -26 )
+			VAR topo = MAXX ( semanas, MAX ( [Casos observados], [Previsão IC 90% superior] ) )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( lim ) && lim > 2 * topo,
+			        "Limiar de alerta (" & FORMAT ( lim, "#,0" ) & " casos) acima da escala",
+			        " "
+			    )
+		displayFolder: 3 Textos
+		lineageTag: f6ee1cd4-f02d-4cb0-9ce8-c971d9ce1baa
+
+	/// Cor das barras do ranking 'Mais perto do limiar': cinza enquanto o município está longe do limiar; laranja a partir de 75% do limiar; vermelho no limiar ou acima. Destaca só o que pede atenção.
+	measure 'Cor da proximidade (barra)' =
+			VAR p = [% do limiar (8 maiores)]
+			RETURN
+			    SWITCH ( TRUE (),
+			        ISBLANK ( p ), BLANK (),
+			        p >= 1, "#D03B3B",
+			        p >= 0.75, "#EE8434",
+			        "#8A8F98" )
+		displayFolder: 1 Observado
+		lineageTag: f819a95b-bbbe-4cda-86d1-2e98c0aa2712
+
+	/// Maior probabilidade de alerta em 4 semanas entre os municípios (cartão da Visão geral); o município vai no rótulo
+	measure 'Texto maior risco (valor)' =
+			VAR p = MAXX ( VALUES ( dim_municipio[municipio] ), [Maior probabilidade de alerta (4 semanas)] )
+			RETURN IF ( ISBLANK ( p ), "–", FORMAT ( p, "0%" ) )
+		displayFolder: 3 Textos
+		lineageTag: 02eafa3f-47bd-4333-a457-8ede6f87f905
+
+	/// Rótulo do cartão de maior risco: o município com a maior probabilidade de alerta em 4 semanas
+	measure 'Texto maior risco (rótulo)' =
+			VAR t =
+			    TOPN ( 1,
+			        ADDCOLUMNS ( VALUES ( dim_municipio[municipio] ), "@p", [Maior probabilidade de alerta (4 semanas)] ),
+			        [@p], DESC )
+			VAR m = MAXX ( t, dim_municipio[municipio] )
+			RETURN IF ( ISBLANK ( MAXX ( t, [@p] ) ), "Maior risco", "Maior risco: " & m )
+		displayFolder: 3 Textos
+		lineageTag: 146732fb-9dd7-471c-ad7c-c2e52f85c384
+
+	/// Probabilidade de alerta na próxima semana (cartão da Previsão); a faixa de risco vai no rótulo e na cor
+	measure 'Texto prob. de alerta (valor)' =
+			VAR p = [Probabilidade de alerta (próxima semana)]
+			RETURN IF ( ISBLANK ( p ), "–", FORMAT ( p, "0%" ) )
+		displayFolder: 3 Textos
+		lineageTag: f495bd5f-a79b-4feb-9e84-8f7cc5581ed2
+
+	/// Rótulo do cartão de probabilidade de alerta, com a faixa de risco por extenso
+	measure 'Texto prob. de alerta (rótulo)' =
+			VAR p = [Probabilidade de alerta (próxima semana)]
+			VAR faixa =
+			    SWITCH ( TRUE (), p >= 0.5, "muito alto", p >= 0.25, "alto", p >= 0.1, "moderado", "baixo" )
+			RETURN IF ( ISBLANK ( p ), "Risco +1 semana", "Risco +1 semana: " & faixa )
+		displayFolder: 3 Textos
+		lineageTag: 4ad33da2-3f97-4a45-b220-e4be285e82e8
+
+	/// Cor do número da probabilidade de alerta pela faixa de risco, em tons escuros o bastante para texto: verde < 10%, âmbar 10–25%, laranja 25–50%, vermelho ≥ 50%
+	measure 'Cor do risco (texto)' =
+			VAR p = [Probabilidade de alerta (próxima semana)]
+			RETURN
+			    SWITCH ( TRUE (),
+			        ISBLANK ( p ), "#1F2328",
+			        p >= 0.5, "#C62828",
+			        p >= 0.25, "#D9622B",
+			        p >= 0.1, "#B7791F",
+			        "#2E8B57" )
+		displayFolder: 2 Previsão
+		lineageTag: bd23f190-aad0-46d8-a1e7-1655523cccf3
+
+	column x
+		isHidden
+		lineageTag: 5ed0eef0-6067-49ee-84aa-7af64abe244f
+		isNameInferred
+		sourceColumn: [x]
+
+	partition _Medidas = calculated
+		mode: import
+		source = ROW("x", 0)
+

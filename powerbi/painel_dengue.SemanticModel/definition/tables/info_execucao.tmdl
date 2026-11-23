@@ -1,0 +1,65 @@
+/// Metadados da última execução
+table info_execucao
+	lineageTag: 053ec803-e081-4e5e-820b-782dcd2d970e
+
+	column fonte
+		dataType: string
+		lineageTag: 5cf57f4a-749e-44d2-b8f7-9cedd7464698
+		summarizeBy: none
+		sourceColumn: fonte
+
+	column aviso
+		dataType: string
+		lineageTag: 15ea005c-6dc9-43a0-b9bb-82040e220ecb
+		summarizeBy: none
+		sourceColumn: aviso
+
+	column ultima_semana
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: a4b61cba-db8c-4b81-b6f4-a5ab4a1edf28
+		summarizeBy: none
+		sourceColumn: ultima_semana
+
+		variation Variação
+			isDefault
+			relationship: 343b20ad-80a2-45d5-a1f2-741b561f62cf
+			defaultHierarchy: LocalDateTable_aa1fba3b-a511-44b1-b828-a9f49bb701af.'Hierarquia de datas'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column rotulo_ultima_semana
+		dataType: string
+		lineageTag: 1a4c17fa-b7aa-4ce5-9bb8-ce1f40b66135
+		summarizeBy: none
+		sourceColumn: rotulo_ultima_semana
+
+	column temporadas_teste
+		dataType: string
+		lineageTag: 8e19e770-ce03-4c09-afcd-507029fd5eb7
+		summarizeBy: none
+		sourceColumn: temporadas_teste
+
+	column percentil_limiar
+		dataType: double
+		lineageTag: 63672a7e-4b24-4eea-8327-33a96b09e370
+		summarizeBy: sum
+		sourceColumn: percentil_limiar
+
+		annotation SummarizationSetBy = Automatic
+
+	column gerado_em
+		dataType: dateTime
+		formatString: dd/MM/yyyy HH:mm
+		lineageTag: e2a6f8ca-67ea-4163-ada9-0c75f21e51b6
+		summarizeBy: none
+		sourceColumn: gerado_em
+
+	partition info_execucao = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("info_execucao")
+				in
+				    Fonte
+

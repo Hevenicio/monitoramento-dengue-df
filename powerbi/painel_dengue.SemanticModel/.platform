@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "painel_dengue"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "102f1f0f-fbca-4bae-8640-70ae7d05de99"
+  }
+}

@@ -1,0 +1,27 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: pt-BR
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["MCP-PBIModeling"]
+
+ref table dim_modelo
+ref table dim_municipio
+ref table dim_semana
+ref table fato_backtest
+ref table fato_cobertura
+ref table fato_confiabilidade
+ref table fato_observado
+ref table fato_previsao
+ref table fato_resumo
+ref table info_execucao
+ref table _Medidas
+
+ref cultureInfo pt-BR
+

@@ -1,0 +1,93 @@
+/// Casos semanais por município (consolidados e em nowcast) e clima
+table fato_observado
+	lineageTag: 333ea015-0b0b-4a12-b814-1578b96f92d6
+
+	column geocode
+		dataType: int64
+		isHidden
+		lineageTag: fa14ec7d-ca33-4d7b-8ea8-4b13239d880d
+		summarizeBy: none
+		sourceColumn: geocode
+
+	column inicio_semana
+		dataType: dateTime
+		isHidden
+		formatString: dd/MM/yyyy
+		lineageTag: 24799da8-4115-48b8-b49a-511f6e1ce6cd
+		summarizeBy: none
+		sourceColumn: inicio_semana
+
+	column casos_notificados
+		dataType: double
+		lineageTag: bba4489d-bbba-4c75-a9aa-0a73ea63417c
+		summarizeBy: none
+		sourceColumn: casos_notificados
+
+	column casos_est
+		dataType: double
+		lineageTag: d14151fb-e098-4757-9587-decb71ba577e
+		summarizeBy: none
+		sourceColumn: casos_est
+
+	column casos_usados
+		dataType: double
+		lineageTag: 55092da3-baec-4697-871d-7a60ba8134c6
+		summarizeBy: none
+		sourceColumn: casos_usados
+
+	column nowcast
+		dataType: boolean
+		lineageTag: 396407c0-a47e-4b3d-8010-24a02bbba33c
+		summarizeBy: none
+		sourceColumn: nowcast
+
+	column casos_consolidados
+		dataType: double
+		lineageTag: 46e8f375-f002-47be-961d-5a103bd284d3
+		summarizeBy: none
+		sourceColumn: casos_consolidados
+
+	column casos_nowcast
+		dataType: double
+		lineageTag: 1e2abed8-d957-4540-87f0-d9c31180a67a
+		summarizeBy: none
+		sourceColumn: casos_nowcast
+
+	column linha_nowcast
+		dataType: double
+		lineageTag: bd3f56d0-9554-452b-a6a9-cda4d23805d1
+		summarizeBy: none
+		sourceColumn: linha_nowcast
+
+	column incidencia
+		dataType: double
+		lineageTag: 953aad59-d39b-4c35-b367-3c777b277ecc
+		summarizeBy: none
+		sourceColumn: incidencia
+
+	column temp_med
+		dataType: double
+		lineageTag: 02bc86db-e3a2-4a9e-b1e0-1ce0e5c5e9dd
+		summarizeBy: none
+		sourceColumn: temp_med
+
+	column precip_tot
+		dataType: double
+		lineageTag: bfe3d804-4891-4760-be5d-cb1b6ba9f2f7
+		summarizeBy: none
+		sourceColumn: precip_tot
+
+	column umid_med
+		dataType: double
+		lineageTag: d279b6c8-8449-48cd-8a07-27dccc391478
+		summarizeBy: none
+		sourceColumn: umid_med
+
+	partition fato_observado = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("fato_observado")
+				in
+				    Fonte
+

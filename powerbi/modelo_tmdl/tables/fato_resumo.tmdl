@@ -1,0 +1,85 @@
+/// Médias do backtest por modelo e horizonte (tabela impressa por executar)
+table fato_resumo
+	lineageTag: 4b2086ce-f765-4918-8b92-4998753f82a7
+
+	column modelo
+		dataType: string
+		isHidden
+		lineageTag: 0c40d5ce-3ac2-4b79-bce5-ad5c8162e4f2
+		summarizeBy: none
+		sourceColumn: modelo
+
+	column horizonte
+		dataType: int64
+		lineageTag: 0be6a3bd-58c6-4442-89dc-eb985b541fc2
+		summarizeBy: none
+		sourceColumn: horizonte
+
+	column wis
+		dataType: double
+		lineageTag: 4e06f7d2-d85b-4ff7-a6e8-1c53df44cb47
+		summarizeBy: none
+		sourceColumn: wis
+
+	column wis_log
+		dataType: double
+		lineageTag: f87e9370-bcc3-4921-870c-4207ef84bd32
+		summarizeBy: none
+		sourceColumn: wis_log
+
+	column erro_abs_mediana
+		dataType: double
+		lineageTag: e4d0bf5e-9f8c-4615-8b94-533e6e291dec
+		summarizeBy: none
+		sourceColumn: erro_abs_mediana
+
+	column cobre_95
+		dataType: double
+		lineageTag: 32a1459f-0845-4669-8cd2-6acbf1647f08
+		summarizeBy: none
+		sourceColumn: cobre_95
+
+	column cobre_90
+		dataType: double
+		lineageTag: dc85814f-e3c8-4e9e-95b3-23fdc9801ed9
+		summarizeBy: none
+		sourceColumn: cobre_90
+
+	column cobre_80
+		dataType: double
+		lineageTag: 74ee3570-983c-49b9-983f-5de345326406
+		summarizeBy: none
+		sourceColumn: cobre_80
+
+	column cobre_50
+		dataType: double
+		lineageTag: 19b7db6a-a239-43f5-a7e9-f5a399f4d055
+		summarizeBy: none
+		sourceColumn: cobre_50
+
+	column n
+		dataType: int64
+		lineageTag: 28ca5fad-74ee-43b2-a455-9a5fd0b1f33b
+		summarizeBy: none
+		sourceColumn: n
+
+	column wis_log_relativo
+		dataType: double
+		lineageTag: 457fa759-5232-4203-b24c-b44e612e94cc
+		summarizeBy: none
+		sourceColumn: wis_log_relativo
+
+	column brier_alerta
+		dataType: double
+		lineageTag: f615e838-c0c0-4f1c-a850-4a89b89e3dda
+		summarizeBy: none
+		sourceColumn: brier_alerta
+
+	partition fato_resumo = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("fato_resumo")
+				in
+				    Fonte
+

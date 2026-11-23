@@ -1,0 +1,117 @@
+/// Semanas epidemiológicas (domingo a sábado), com temporada e distância da última semana observada
+table dim_semana
+	lineageTag: 6d93b890-f186-4e66-863b-ab873f9dc9d1
+
+	column inicio_semana
+		dataType: dateTime
+		isKey
+		formatString: dd/MM/yyyy
+		lineageTag: 0732fcc2-c5ee-4834-b894-69cbb2af4577
+		summarizeBy: none
+		sourceColumn: inicio_semana
+
+		variation Variação
+			isDefault
+			relationship: f2b1cd85-40d8-4d91-8966-536824340d10
+			defaultHierarchy: LocalDateTable_12b8cde8-1aaa-40f5-86f6-a218c70b6acb.'Hierarquia de datas'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column fim_semana
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: e43b5baf-0569-48d0-9fc4-aa8f26937072
+		summarizeBy: none
+		sourceColumn: fim_semana
+
+		variation Variação
+			isDefault
+			relationship: 4c30697e-e79b-4011-a301-983d8a3d3c95
+			defaultHierarchy: LocalDateTable_686ff7e1-e19a-4024-b275-c60bc5f61861.'Hierarquia de datas'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ano_se
+		dataType: int64
+		lineageTag: 7a083f67-7ba9-4bcc-89a0-58d26fed5fe8
+		summarizeBy: sum
+		sourceColumn: ano_se
+
+		annotation SummarizationSetBy = Automatic
+
+	column se
+		dataType: int64
+		lineageTag: 63fdc313-8fe3-4980-84c2-3b77fa323333
+		summarizeBy: sum
+		sourceColumn: se
+
+		annotation SummarizationSetBy = Automatic
+
+	column rotulo_se
+		dataType: string
+		lineageTag: 49edc7dd-1a16-45fa-ba39-7811b9f3cda3
+		summarizeBy: none
+		sourceColumn: rotulo_se
+		sortByColumn: inicio_semana
+
+	column temporada
+		dataType: int64
+		lineageTag: 36d9d43d-d845-4703-9f28-1abcb8dcb5b0
+		summarizeBy: sum
+		sourceColumn: temporada
+
+		annotation SummarizationSetBy = Automatic
+
+	column rotulo_temporada
+		dataType: string
+		lineageTag: b4b071f6-d1b7-4a66-abcc-a784f23b5a2a
+		summarizeBy: none
+		sourceColumn: rotulo_temporada
+		sortByColumn: temporada
+
+	column semana_temporada
+		dataType: int64
+		lineageTag: 8d67df84-b4e1-491e-93e1-710890b2cbdc
+		summarizeBy: sum
+		sourceColumn: semana_temporada
+
+		annotation SummarizationSetBy = Automatic
+
+	column semanas_desde_ultima
+		dataType: int64
+		lineageTag: f31dac5d-3de2-4e6e-9596-6ea6bf9e7f12
+		summarizeBy: sum
+		sourceColumn: semanas_desde_ultima
+
+		annotation SummarizationSetBy = Automatic
+
+	column periodo
+		dataType: string
+		lineageTag: 4a31107c-0fab-4512-8642-b23d9c235a3e
+		summarizeBy: none
+		sourceColumn: periodo
+
+	column mes
+		dataType: int64
+		lineageTag: 9c21dc6a-5907-4e49-b9f6-0cb6c58c2e06
+		summarizeBy: sum
+		sourceColumn: mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column ano
+		dataType: int64
+		lineageTag: d20f1268-bc3f-45f9-ab2c-5bc164aa9fe7
+		summarizeBy: sum
+		sourceColumn: ano
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_semana = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("dim_semana")
+				in
+				    Fonte
+

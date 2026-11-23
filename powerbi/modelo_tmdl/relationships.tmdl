@@ -1,0 +1,44 @@
+relationship obs_municipio
+	fromColumn: fato_observado.geocode
+	toColumn: dim_municipio.geocode
+
+relationship prev_municipio
+	fromColumn: fato_previsao.geocode
+	toColumn: dim_municipio.geocode
+
+relationship bt_municipio
+	fromColumn: fato_backtest.geocode
+	toColumn: dim_municipio.geocode
+
+relationship obs_semana
+	fromColumn: fato_observado.inicio_semana
+	toColumn: dim_semana.inicio_semana
+
+relationship prev_semana
+	fromColumn: fato_previsao.semana_alvo
+	toColumn: dim_semana.inicio_semana
+
+relationship bt_semana
+	fromColumn: fato_backtest.semana_alvo
+	toColumn: dim_semana.inicio_semana
+
+relationship prev_modelo
+	fromColumn: fato_previsao.modelo
+	toColumn: dim_modelo.modelo
+
+relationship bt_modelo
+	fromColumn: fato_backtest.modelo
+	toColumn: dim_modelo.modelo
+
+relationship resumo_modelo
+	fromColumn: fato_resumo.modelo
+	toColumn: dim_modelo.modelo
+
+relationship cobertura_modelo
+	fromColumn: fato_cobertura.modelo
+	toColumn: dim_modelo.modelo
+
+relationship confiab_modelo
+	fromColumn: fato_confiabilidade.modelo
+	toColumn: dim_modelo.modelo
+

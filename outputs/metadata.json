@@ -1,0 +1,23 @@
+{
+  "fonte": "mosqlimate",
+  "aviso": null,
+  "temporadas_teste": [
+    2023,
+    2024,
+    2025
+  ],
+  "ultima_semana": "2026-10-18",
+  "modelos": [
+    "climatologia",
+    "crescimento",
+    "gbm_quantilico"
+  ],
+  "horizontes": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "percentil_limiar": 0.9,
+  "gerado_em": "2026-11-03T12:51:14"
+}

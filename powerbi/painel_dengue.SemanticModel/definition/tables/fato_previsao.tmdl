@@ -1,0 +1,160 @@
+/// Previsão atual: mediana e intervalos; horizonte 0 = último observado (âncora do gráfico)
+table fato_previsao
+	lineageTag: 9d8a9e52-e675-4678-9a48-54ea32184af2
+
+	column mediana
+		dataType: double
+		lineageTag: acbd0662-cbf3-42bc-909f-0ebc573392ea
+		summarizeBy: sum
+		sourceColumn: mediana
+
+		annotation SummarizationSetBy = Automatic
+
+	column li_50
+		dataType: double
+		lineageTag: 239d380a-0983-4460-9b74-bc99cce54f8e
+		summarizeBy: sum
+		sourceColumn: li_50
+
+		annotation SummarizationSetBy = Automatic
+
+	column ls_50
+		dataType: double
+		lineageTag: 6f8c4f9f-f9c7-4fff-9b21-b5d1097cccd5
+		summarizeBy: sum
+		sourceColumn: ls_50
+
+		annotation SummarizationSetBy = Automatic
+
+	column li_80
+		dataType: double
+		lineageTag: 2dc58ca9-ea29-4394-9388-ce60012e1183
+		summarizeBy: sum
+		sourceColumn: li_80
+
+		annotation SummarizationSetBy = Automatic
+
+	column ls_80
+		dataType: double
+		lineageTag: ba05bef4-ec30-49a7-8dcd-99eab6f6c683
+		summarizeBy: sum
+		sourceColumn: ls_80
+
+		annotation SummarizationSetBy = Automatic
+
+	column li_90
+		dataType: double
+		lineageTag: 0bae266e-f4f2-42b5-b23a-58b9fce6f648
+		summarizeBy: sum
+		sourceColumn: li_90
+
+		annotation SummarizationSetBy = Automatic
+
+	column ls_90
+		dataType: double
+		lineageTag: b3b31dbe-63e2-4003-873d-90b2bba10913
+		summarizeBy: sum
+		sourceColumn: ls_90
+
+		annotation SummarizationSetBy = Automatic
+
+	column li_95
+		dataType: double
+		lineageTag: 89822f76-d3c1-4078-9e7e-22534657043f
+		summarizeBy: sum
+		sourceColumn: li_95
+
+		annotation SummarizationSetBy = Automatic
+
+	column ls_95
+		dataType: double
+		lineageTag: 3a63d153-9f97-443f-8e5c-7224ca320295
+		summarizeBy: sum
+		sourceColumn: ls_95
+
+		annotation SummarizationSetBy = Automatic
+
+	column modelo
+		dataType: string
+		isHidden
+		lineageTag: 9ba12252-4af3-420f-b324-5eca4629f6f4
+		summarizeBy: none
+		sourceColumn: modelo
+
+	column geocode
+		dataType: int64
+		isHidden
+		lineageTag: e9d7ef26-1c36-4b1c-a213-e1671d5f3974
+		summarizeBy: none
+		sourceColumn: geocode
+
+	column origem
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: a79cdb28-fed9-4dab-9f00-f5b5ee5844d5
+		summarizeBy: none
+		sourceColumn: origem
+
+		variation Variação
+			isDefault
+			relationship: 6ac738fa-3d0d-4c99-9eab-7f079495eae2
+			defaultHierarchy: LocalDateTable_ea48d9aa-4369-45f6-8bc9-40da52ebe9c7.'Hierarquia de datas'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column horizonte
+		dataType: int64
+		lineageTag: 2274f7e2-9d29-42c3-9f3a-1ecfe715827e
+		summarizeBy: sum
+		sourceColumn: horizonte
+
+		annotation SummarizationSetBy = Automatic
+
+	column semana_alvo
+		dataType: dateTime
+		isHidden
+		formatString: dd/MM/yyyy
+		lineageTag: cfece314-ea8e-487c-a923-f022b640ca79
+		summarizeBy: none
+		sourceColumn: semana_alvo
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column limiar_casos
+		dataType: double
+		formatString: #,0
+		lineageTag: 56968b2a-81f9-4ff3-b299-675536c9710d
+		summarizeBy: sum
+		sourceColumn: limiar_casos
+
+		annotation SummarizationSetBy = Automatic
+
+	column prob_alerta
+		dataType: double
+		formatString: 0%
+		lineageTag: dedee903-775c-46bb-b6ad-e3069e62d345
+		summarizeBy: sum
+		sourceColumn: prob_alerta
+
+		annotation SummarizationSetBy = Automatic
+
+	column mediana_acima_limiar
+		dataType: boolean
+		lineageTag: af0021de-c789-423f-92ae-33cef95dc428
+		summarizeBy: none
+		sourceColumn: mediana_acima_limiar
+
+	column tipo
+		dataType: string
+		lineageTag: 23417e39-2752-4941-9246-4321e76c0067
+		summarizeBy: none
+		sourceColumn: tipo
+
+	partition fato_previsao = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("fato_previsao")
+				in
+				    Fonte
+

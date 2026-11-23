@@ -1,0 +1,217 @@
+/// Medidas do painel (ver powerbi/medidas.dax)
+table _Medidas
+	lineageTag: 265002e6-77f1-4984-87bb-c2f9a9900ea2
+
+	measure 'Casos observados' = SUM ( fato_observado[casos_usados] )
+		formatString: #,0
+		displayFolder: 1 Observado
+		lineageTag: ab1d6a15-aa8c-4157-a151-15ef386f1f73
+
+	measure 'Linha observado consolidado' = SUM ( fato_observado[casos_consolidados] )
+		formatString: #,0
+		displayFolder: 1 Observado
+		lineageTag: 802d6107-56ca-44c7-b1c4-37400b77ade4
+
+	measure 'Linha nowcast' = SUM ( fato_observado[linha_nowcast] )
+		formatString: #,0
+		displayFolder: 1 Observado
+		lineageTag: 78017bd5-5300-474e-9be8-b1abc4fa49da
+
+	measure 'Incidência por 100 mil hab' = DIVIDE ( SUM ( fato_observado[casos_usados] ), SUM ( dim_municipio[populacao] ) ) * 100000
+		formatString: #,0.0
+		displayFolder: 1 Observado
+		lineageTag: 4fb224f0-cb80-454c-9c76-0471383c451f
+
+	measure '_Uma previsão' = COUNTROWS ( fato_previsao ) = 1
+		isHidden
+		displayFolder: 2 Previsão
+		lineageTag: 81a4b926-faa6-4cfb-8c8e-d7194423df8a
+
+	measure 'Previsão mediana' = IF ( [_Uma previsão], SUM ( fato_previsao[mediana] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 2ee4a2c6-d00c-4543-837e-920e2fcbc7be
+
+	measure 'Previsão IC 50% inferior' = IF ( [_Uma previsão], SUM ( fato_previsao[li_50] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 815414bf-2ba6-441e-a240-95b5d157b7de
+
+	measure 'Previsão IC 50% superior' = IF ( [_Uma previsão], SUM ( fato_previsao[ls_50] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 57381a6b-1c43-4a57-b189-35cbd8ba0e7b
+
+	measure 'Previsão IC 90% inferior' = IF ( [_Uma previsão], SUM ( fato_previsao[li_90] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: eff4b560-11e5-4f23-bfd1-f2f7bcfe7f87
+
+	measure 'Previsão IC 90% superior' = IF ( [_Uma previsão], SUM ( fato_previsao[ls_90] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 9329e2d4-1f1b-40ec-a851-c23546a0b3e3
+
+	measure 'Limiar de alerta (casos)' = SELECTEDVALUE ( dim_municipio[limiar_casos] )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: 708d69c3-3b0f-4e1f-8d4f-c6ab70e3ef52
+
+	measure 'Probabilidade de alerta' = IF ( [_Uma previsão], SUM ( fato_previsao[prob_alerta] ) )
+		formatString: 0%
+		displayFolder: 2 Previsão
+		lineageTag: e00e8177-7a4c-4c37-8bb4-a79df8ae23d1
+
+	measure 'Probabilidade de alerta (próxima semana)' = CALCULATE ( [Probabilidade de alerta], fato_previsao[horizonte] = 1 )
+		formatString: 0%
+		displayFolder: 2 Previsão
+		lineageTag: 0bbdd98f-56a4-40a2-a9e6-681849be6dd9
+
+	measure 'Maior probabilidade de alerta (4 semanas)' =
+			IF (
+			    HASONEVALUE ( dim_modelo[modelo] ),
+			    CALCULATE ( MAX ( fato_previsao[prob_alerta] ), fato_previsao[horizonte] >= 1 )
+			)
+		formatString: 0%
+		displayFolder: 2 Previsão
+		lineageTag: eda8f112-1291-4011-a05c-faf76dbfaca2
+
+	measure 'Municípios com alerta provável' =
+			IF (
+			    HASONEVALUE ( dim_modelo[modelo] ),
+			    CALCULATE (
+			        DISTINCTCOUNT ( fato_previsao[geocode] ),
+			        fato_previsao[horizonte] >= 1,
+			        fato_previsao[prob_alerta] >= 0.5
+			    ) + 0
+			)
+		formatString: 0
+		displayFolder: 2 Previsão
+		lineageTag: dccba6e0-78a5-4d7c-996a-e4db20ef6023
+
+	measure 'Previsão total (soma das medianas)' = IF ( HASONEVALUE ( dim_modelo[modelo] ), SUM ( fato_previsao[mediana] ) )
+		formatString: #,0
+		displayFolder: 2 Previsão
+		lineageTag: bf65d3e8-9c21-4c30-a3d3-68208e5f602b
+
+	measure 'Texto dados até' =
+			"Dados até a " & MAX ( info_execucao[rotulo_ultima_semana] )
+			    & " (semana iniciada em " & FORMAT ( MAX ( info_execucao[ultima_semana] ), "dd/mm/yyyy" ) & ")"
+		displayFolder: 3 Textos
+		lineageTag: 474f6ed8-2ec7-4586-8267-3e7817c801dd
+
+	measure 'Texto próxima semana' =
+			VAR m = CALCULATE ( [Previsão mediana], fato_previsao[horizonte] = 1 )
+			VAR li = CALCULATE ( [Previsão IC 90% inferior], fato_previsao[horizonte] = 1 )
+			VAR ls = CALCULATE ( [Previsão IC 90% superior], fato_previsao[horizonte] = 1 )
+			RETURN
+			    IF (
+			        ISBLANK ( m ),
+			        "Escolha um município e um modelo",
+			        FORMAT ( m, "#,0" ) & " casos (IC 90%: " & FORMAT ( li, "#,0" ) & " a " & FORMAT ( ls, "#,0" ) & ")"
+			    )
+		displayFolder: 3 Textos
+		lineageTag: bd55aebf-9667-4c9c-829f-7235a03f14b6
+
+	measure 'Texto aviso de dados' =
+			IF (
+			    MAX ( info_execucao[fonte] ) = "sintetico",
+			    "DADOS SINTÉTICOS: não representam a dengue real",
+			    "Fonte: InfoDengue e Mosqlimate"
+			)
+		displayFolder: 3 Textos
+		lineageTag: af8fc6b0-b5a9-4fff-a9d5-e782353956c2
+
+	measure 'Backtest WIS (casos)' = AVERAGE ( fato_backtest[wis] )
+		formatString: #,0.0
+		displayFolder: 4 Backtest
+		lineageTag: 19329f0c-b30f-4189-a800-e3037c11f318
+
+	measure 'Backtest WIS (log)' = AVERAGE ( fato_backtest[wis_log] )
+		formatString: 0.000
+		displayFolder: 4 Backtest
+		lineageTag: 430f6b9e-8459-48d7-8ac6-fc72524bba3f
+
+	measure 'Backtest WIS relativo à climatologia' =
+			DIVIDE (
+			    [Backtest WIS (log)],
+			    CALCULATE ( [Backtest WIS (log)], REMOVEFILTERS ( dim_modelo ), dim_modelo[modelo] = "climatologia" )
+			)
+		formatString: 0.00
+		displayFolder: 4 Backtest
+		lineageTag: 7721bd8c-c66a-4381-997a-006f9dc73a05
+
+	measure 'Backtest erro absoluto da mediana' = AVERAGE ( fato_backtest[erro_abs_mediana] )
+		formatString: #,0.0
+		displayFolder: 4 Backtest
+		lineageTag: aed586f4-5795-4f6e-ad06-6e257e11c01f
+
+	measure 'Backtest cobertura IC 50%' = AVERAGE ( fato_backtest[cobre_50] )
+		formatString: 0%
+		displayFolder: 4 Backtest
+		lineageTag: e0cf5327-695a-41f1-a794-ff689abd257e
+
+	measure 'Backtest cobertura IC 80%' = AVERAGE ( fato_backtest[cobre_80] )
+		formatString: 0%
+		displayFolder: 4 Backtest
+		lineageTag: 62dc6ad2-026d-4a49-a16c-b261733131c8
+
+	measure 'Backtest cobertura IC 90%' = AVERAGE ( fato_backtest[cobre_90] )
+		formatString: 0%
+		displayFolder: 4 Backtest
+		lineageTag: c58df55b-cc41-412e-9d4e-7bbb24d11dfe
+
+	measure 'Backtest cobertura IC 95%' = AVERAGE ( fato_backtest[cobre_95] )
+		formatString: 0%
+		displayFolder: 4 Backtest
+		lineageTag: b2f8fef0-6fd6-44f4-8273-d0ebb0a57889
+
+	measure 'Backtest Brier do alerta' = AVERAGE ( fato_backtest[brier] )
+		formatString: 0.000
+		displayFolder: 4 Backtest
+		lineageTag: 66329154-41ca-46f3-a3a8-974fb42596c2
+
+	measure 'Backtest previsões avaliadas' = COUNT ( fato_backtest[wis] )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: 03cc164c-11cd-46c8-81bd-f3eaf7e4d896
+
+	measure 'Backtest observado' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[observado] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: b2d49b4f-b2db-4746-a115-6cc102d065b3
+
+	measure 'Backtest mediana prevista' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[mediana] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: 5d34ba9e-4544-45da-948e-12c6f930ba57
+
+	measure 'Backtest IC 90% inferior' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[li_90] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: a23a1d2a-3aeb-4a35-a2fd-0297ea14bf6a
+
+	measure 'Backtest IC 90% superior' = IF ( COUNTROWS ( fato_backtest ) = 1, SUM ( fato_backtest[ls_90] ) )
+		formatString: #,0
+		displayFolder: 4 Backtest
+		lineageTag: d067175e-02bd-4267-859b-adcf7538713c
+
+	measure 'Cobertura observada' = AVERAGE ( fato_cobertura[cobertura_observada] )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: a5049999-6ae4-4b19-b930-e3725ae4fcd2
+
+	measure 'Cobertura nominal' = AVERAGE ( fato_cobertura[cobertura_nominal] )
+		formatString: 0%
+		displayFolder: 5 Cobertura
+		lineageTag: 03458525-1450-4d45-98a4-3146c32d928f
+
+	column x
+		isHidden
+		isNameInferred
+		sourceColumn: [x]
+
+	partition _Medidas = calculated
+		mode: import
+		source = ROW("x", 0)
+

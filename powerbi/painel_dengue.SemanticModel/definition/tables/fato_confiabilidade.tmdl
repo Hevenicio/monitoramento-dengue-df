@@ -1,0 +1,65 @@
+/// Probabilidade prevista x frequência observada de alerta
+table fato_confiabilidade
+	lineageTag: 2fa50dc2-618f-4758-8905-e4f41b4959e8
+
+	column modelo
+		dataType: string
+		isHidden
+		lineageTag: 90b2afdf-de48-4b3a-b360-329f08e6252f
+		summarizeBy: none
+		sourceColumn: modelo
+
+	column faixa
+		dataType: string
+		lineageTag: 8fb48721-0c78-419b-a307-2a06d34809d4
+		summarizeBy: none
+		sourceColumn: faixa
+
+	column prob_media
+		dataType: double
+		formatString: 0%
+		lineageTag: 5ef09f85-6af7-4e05-8d3f-cda8d16e504b
+		summarizeBy: none
+		sourceColumn: prob_media
+
+	column freq_observada
+		dataType: double
+		formatString: 0%
+		lineageTag: 993d54ac-21b9-41db-8dfd-b2f4f6e66ab8
+		summarizeBy: none
+		sourceColumn: freq_observada
+
+	column n
+		dataType: int64
+		lineageTag: 1fe94aaa-59d7-4ce4-848f-89f09c14a8b5
+		summarizeBy: none
+		sourceColumn: n
+
+	/// 1 a 10: faixa de probabilidade prevista (0-10%, 10-20%, ...)
+	column faixa_ordem = IF ( LEFT ( fato_confiabilidade[faixa], 2 ) = "(-", 1, VALUE ( MID ( fato_confiabilidade[faixa], 4, 1 ) ) + 1 )
+		dataType: int64
+		isHidden
+		lineageTag: 02456247-42b3-4fe4-b6cb-7312bec7670f
+		summarizeBy: none
+
+	/// Centro da faixa de probabilidade prevista
+	column faixa_centro = ( fato_confiabilidade[faixa_ordem] - 0.5 ) / 10
+		dataType: double
+		formatString: 0%
+		lineageTag: 06413627-ef53-4c4f-8f63-f99e57cd4ba4
+		summarizeBy: none
+
+	column faixa_rotulo = FORMAT ( ( fato_confiabilidade[faixa_ordem] - 1 ) / 10, "0%" ) & "–" & FORMAT ( fato_confiabilidade[faixa_ordem] / 10, "0%" )
+		dataType: string
+		lineageTag: 519c7c82-904c-4a4a-963a-f842c8124d1d
+		summarizeBy: none
+		sortByColumn: faixa_ordem
+
+	partition fato_confiabilidade = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("fato_confiabilidade")
+				in
+				    Fonte
+

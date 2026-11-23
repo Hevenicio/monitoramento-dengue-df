@@ -1,0 +1,243 @@
+/// Previsões do backtest com observado, WIS, cobertura e Brier
+table fato_backtest
+	lineageTag: c63110f0-3464-4374-9284-907ed0e44cfd
+
+	column modelo
+		dataType: string
+		isHidden
+		lineageTag: 7560d288-5e2d-4f7f-8947-2feb4cb85fe5
+		summarizeBy: none
+		sourceColumn: modelo
+
+	column geocode
+		dataType: int64
+		isHidden
+		lineageTag: d0a4ec57-130d-4ef0-ba2e-e1411efc7d13
+		summarizeBy: none
+		sourceColumn: geocode
+
+	column origem
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: deb4caaf-e0de-42d8-9ca1-00a4e0ac1ec2
+		summarizeBy: none
+		sourceColumn: origem
+
+		variation Variação
+			isDefault
+			relationship: 006fe7f7-0be8-458a-9103-3820cca2e5b9
+			defaultHierarchy: LocalDateTable_0bff280b-816c-42b8-b160-9cfc5f913eb3.'Hierarquia de datas'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column horizonte
+		dataType: int64
+		lineageTag: a0766c96-696c-402a-951a-333241d73885
+		summarizeBy: sum
+		sourceColumn: horizonte
+
+		annotation SummarizationSetBy = Automatic
+
+	column semana_alvo
+		dataType: dateTime
+		isHidden
+		formatString: dd/MM/yyyy
+		lineageTag: 68061163-a25f-49c5-8f44-96faeec21f80
+		summarizeBy: none
+		sourceColumn: semana_alvo
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column temporada_teste
+		dataType: int64
+		lineageTag: 02bc9c20-40c2-4a2c-b06d-a4eb08dbc733
+		summarizeBy: sum
+		sourceColumn: temporada_teste
+
+		annotation SummarizationSetBy = Automatic
+
+	column mediana
+		dataType: double
+		lineageTag: a091d7be-a384-4952-8597-7b286743b990
+		summarizeBy: sum
+		sourceColumn: mediana
+
+		annotation SummarizationSetBy = Automatic
+
+	column li_50
+		dataType: double
+		lineageTag: ad306c58-45d8-4aea-b6e2-a64ab3912449
+		summarizeBy: sum
+		sourceColumn: li_50
+
+		annotation SummarizationSetBy = Automatic
+
+	column ls_50
+		dataType: double
+		lineageTag: bf7c6be3-16a6-4bf7-befd-66b656a75dc0
+		summarizeBy: sum
+		sourceColumn: ls_50
+
+		annotation SummarizationSetBy = Automatic
+
+	column li_80
+		dataType: double
+		lineageTag: 47966a1b-d4f4-4dd7-ab2c-53fb95fb32d3
+		summarizeBy: sum
+		sourceColumn: li_80
+
+		annotation SummarizationSetBy = Automatic
+
+	column ls_80
+		dataType: double
+		lineageTag: 02163257-128e-477e-ae9c-f8c04d6ae7a7
+		summarizeBy: sum
+		sourceColumn: ls_80
+
+		annotation SummarizationSetBy = Automatic
+
+	column li_90
+		dataType: double
+		lineageTag: 4151765a-7258-419c-85f5-aa72f6667407
+		summarizeBy: sum
+		sourceColumn: li_90
+
+		annotation SummarizationSetBy = Automatic
+
+	column ls_90
+		dataType: double
+		lineageTag: 9a434e4f-7415-4eae-95a1-2798b44ba833
+		summarizeBy: sum
+		sourceColumn: ls_90
+
+		annotation SummarizationSetBy = Automatic
+
+	column li_95
+		dataType: double
+		lineageTag: 4ea79b02-e988-4169-9637-207302e8995d
+		summarizeBy: sum
+		sourceColumn: li_95
+
+		annotation SummarizationSetBy = Automatic
+
+	column ls_95
+		dataType: double
+		lineageTag: dabd5eb7-9ce6-4af0-b907-a7b1f26e75ca
+		summarizeBy: sum
+		sourceColumn: ls_95
+
+		annotation SummarizationSetBy = Automatic
+
+	column observado
+		dataType: double
+		lineageTag: 01a8b29d-b1f3-447b-80dc-396cd9bee06b
+		summarizeBy: sum
+		sourceColumn: observado
+
+		annotation SummarizationSetBy = Automatic
+
+	column wis
+		dataType: double
+		lineageTag: 9ac8d33d-d386-46d3-a9a2-06a957a0c5c4
+		summarizeBy: sum
+		sourceColumn: wis
+
+		annotation SummarizationSetBy = Automatic
+
+	column wis_log
+		dataType: double
+		lineageTag: 015c0b74-323b-414d-8d49-14b6363b0f17
+		summarizeBy: sum
+		sourceColumn: wis_log
+
+		annotation SummarizationSetBy = Automatic
+
+	column erro_abs_mediana
+		dataType: double
+		lineageTag: e2bee352-50a9-453e-8224-5ad9a7696faa
+		summarizeBy: sum
+		sourceColumn: erro_abs_mediana
+
+		annotation SummarizationSetBy = Automatic
+
+	column cobre_95
+		dataType: double
+		lineageTag: 13bc00ab-985d-40bc-90a8-3bfcd7da962b
+		summarizeBy: sum
+		sourceColumn: cobre_95
+
+		annotation SummarizationSetBy = Automatic
+
+	column cobre_90
+		dataType: double
+		lineageTag: 30a71b09-97e7-4a7b-9475-55698d79b27c
+		summarizeBy: sum
+		sourceColumn: cobre_90
+
+		annotation SummarizationSetBy = Automatic
+
+	column cobre_80
+		dataType: double
+		lineageTag: e818749b-e155-47c5-9e42-77de8479605d
+		summarizeBy: sum
+		sourceColumn: cobre_80
+
+		annotation SummarizationSetBy = Automatic
+
+	column cobre_50
+		dataType: double
+		lineageTag: 6062bb82-f1f1-401b-b8f2-a985b1b1da0f
+		summarizeBy: sum
+		sourceColumn: cobre_50
+
+		annotation SummarizationSetBy = Automatic
+
+	column limiar_casos
+		dataType: double
+		formatString: #,0
+		lineageTag: 977cb4f0-f5e1-4554-a28c-07ef302d1e6e
+		summarizeBy: sum
+		sourceColumn: limiar_casos
+
+		annotation SummarizationSetBy = Automatic
+
+	column prob_alerta
+		dataType: double
+		formatString: 0%
+		lineageTag: f6fbd9f9-0427-45de-bcd7-bd37e0a1d4a9
+		summarizeBy: sum
+		sourceColumn: prob_alerta
+
+		annotation SummarizationSetBy = Automatic
+
+	column excedeu
+		dataType: double
+		lineageTag: d81f5250-27f9-40e8-8593-0bf5997acbe2
+		summarizeBy: sum
+		sourceColumn: excedeu
+
+		annotation SummarizationSetBy = Automatic
+
+	column brier
+		dataType: double
+		lineageTag: c0e29922-53b3-43d6-83a8-e90af54ecf46
+		summarizeBy: sum
+		sourceColumn: brier
+
+		annotation SummarizationSetBy = Automatic
+
+	column rotulo_temporada_teste
+		dataType: string
+		lineageTag: 9e2100c8-9013-4555-a537-2d048a6f52eb
+		summarizeBy: none
+		sourceColumn: rotulo_temporada_teste
+		sortByColumn: temporada_teste
+
+	partition fato_backtest = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("fato_backtest")
+				in
+				    Fonte
+

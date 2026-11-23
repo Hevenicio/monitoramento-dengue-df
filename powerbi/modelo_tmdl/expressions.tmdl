@@ -1,0 +1,10 @@
+/// Pasta com as tabelas geradas por: python -m dengue_df exportar-powerbi (terminar com \)
+expression PastaDados = "C:\monitoramento-dengue-df\outputs\powerbi\" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: b334de8b-c953-419b-b72a-3bbc0a13d292
+
+/// Lê uma tabela Parquet da pasta PastaDados
+expression LerTabela =
+		(nome as text) as table =>
+		    Parquet.Document(File.Contents(PastaDados & nome & ".parquet"))
+	lineageTag: 2d3bd181-4c76-413b-a1f7-b4ca7855656c
+

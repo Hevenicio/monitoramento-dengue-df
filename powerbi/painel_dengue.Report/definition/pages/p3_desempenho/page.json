@@ -1,0 +1,120 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "p3_desempenho",
+  "displayName": "Desempenho dos modelos",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#F2F3F5'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outspace": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#F2F3F5'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "p3_seg_municipio",
+      "target": "p3_matriz_bt",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_municipio",
+      "target": "p3_cobertura",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_municipio",
+      "target": "p3_confiabilidade",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_modelo_bt",
+      "target": "p3_matriz_bt",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_modelo_bt",
+      "target": "p3_cobertura",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_modelo_bt",
+      "target": "p3_confiabilidade",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_horizonte",
+      "target": "p3_matriz_bt",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_horizonte",
+      "target": "p3_cobertura",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_horizonte",
+      "target": "p3_confiabilidade",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_temporada",
+      "target": "p3_matriz_bt",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_temporada",
+      "target": "p3_cobertura",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p3_seg_temporada",
+      "target": "p3_confiabilidade",
+      "type": "NoFilter"
+    }
+  ]
+}

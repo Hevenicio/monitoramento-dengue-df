@@ -1,0 +1,67 @@
+# Configuração do projeto dengue-df
+# Edite este arquivo para mudar território, período, alvo e modelos.
+
+dados:
+  doenca: dengue            # dengue | chikungunya | zika
+  inicio: "2012-01-01"      # início da série histórica
+  fim: null                 # null = hoje
+  # Coluna do InfoDengue usada como alvo. "casos" = notificados por semana de início de sintomas.
+  alvo: casos
+  # Nas últimas N semanas os casos notificados ainda estão incompletos (atraso de notificação).
+  # Nessas semanas o alvo é substituído pela estimativa de nowcasting do InfoDengue (casos_est).
+  semanas_nowcast: 3
+
+territorio:
+  # Municípios sem geocode são resolvidos pelo nome na API de localidades do IBGE
+  # (resultado fica em cache em data/ref/municipios.csv).
+  # Lista padrão: Distrito Federal + os 12 municípios goianos da Periferia Metropolitana de Brasília.
+  municipios:
+    - {nome: "Brasília", uf: DF, geocode: 5300108}
+    - {nome: "Águas Lindas de Goiás", uf: GO}
+    - {nome: "Alexânia", uf: GO}
+    - {nome: "Cidade Ocidental", uf: GO}
+    - {nome: "Cocalzinho de Goiás", uf: GO}
+    - {nome: "Cristalina", uf: GO}
+    - {nome: "Formosa", uf: GO}
+    - {nome: "Luziânia", uf: GO}
+    - {nome: "Novo Gama", uf: GO}
+    - {nome: "Padre Bernardo", uf: GO}
+    - {nome: "Planaltina", uf: GO}
+    - {nome: "Santo Antônio do Descoberto", uf: GO}
+    - {nome: "Valparaíso de Goiás", uf: GO}
+
+clima:
+  usar: true                # false = modelo só com a série de casos
+
+modelo:
+  horizontes: [1, 2, 3, 4]  # semanas à frente
+  # Quantis da distribuição preditiva: mediana + intervalos de 50%, 80%, 90% e 95%
+  quantis: [0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.975]
+  lags: 8                   # semanas de histórico de casos usadas como variáveis
+  janela_sazonal: 3         # ± semanas epidemiológicas usadas pelos baselines sazonais
+  modelos: [climatologia, crescimento, gbm_quantilico]
+
+temporada:
+  inicio_se: 41             # temporada de dengue: SE 41 de um ano até a SE 40 do seguinte
+
+backtest:
+  temporadas_teste: 3       # últimas N temporadas completas usadas como teste (origem móvel)
+
+risco:
+  # Limiar de alerta: percentil da incidência semanal histórica de cada município.
+  percentil_limiar: 0.90
+
+api:
+  # O download é feito em pedaços (município × ano) guardados em data/raw/. Se cair no meio,
+  # rodar `ingerir` de novo retoma de onde parou.
+  cache: true
+  # Pedaços que terminam nas últimas N semanas são sempre baixados de novo: o InfoDengue
+  # revisa as semanas recentes conforme chegam notificações atrasadas.
+  semanas_revisao: 12
+  tentativas: 4             # por pedaço, com espera crescente (2 s, 4 s, 8 s...)
+  espera_segundos: 2
+  pausa_segundos: 0.2       # intervalo entre chamadas, para não sobrecarregar a API
+
+caminhos:
+  dados: data
+  saidas: outputs

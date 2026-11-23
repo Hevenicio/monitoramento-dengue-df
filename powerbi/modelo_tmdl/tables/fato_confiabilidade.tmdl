@@ -1,0 +1,43 @@
+/// Probabilidade prevista x frequência observada de alerta
+table fato_confiabilidade
+	lineageTag: 2fa50dc2-618f-4758-8905-e4f41b4959e8
+
+	column modelo
+		dataType: string
+		isHidden
+		lineageTag: 90b2afdf-de48-4b3a-b360-329f08e6252f
+		summarizeBy: none
+		sourceColumn: modelo
+
+	column faixa
+		dataType: string
+		lineageTag: 8fb48721-0c78-419b-a307-2a06d34809d4
+		summarizeBy: none
+		sourceColumn: faixa
+
+	column prob_media
+		dataType: double
+		lineageTag: 5ef09f85-6af7-4e05-8d3f-cda8d16e504b
+		summarizeBy: none
+		sourceColumn: prob_media
+
+	column freq_observada
+		dataType: double
+		lineageTag: 993d54ac-21b9-41db-8dfd-b2f4f6e66ab8
+		summarizeBy: none
+		sourceColumn: freq_observada
+
+	column n
+		dataType: int64
+		lineageTag: 1fe94aaa-59d7-4ce4-848f-89f09c14a8b5
+		summarizeBy: none
+		sourceColumn: n
+
+	partition fato_confiabilidade = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("fato_confiabilidade")
+				in
+				    Fonte
+

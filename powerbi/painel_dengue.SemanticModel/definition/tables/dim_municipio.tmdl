@@ -1,0 +1,78 @@
+/// Municípios do DF e Entorno com população e limiar de alerta
+table dim_municipio
+	lineageTag: 188b5e70-fdc4-44f7-9c00-68cd41ca0f85
+
+	column geocode
+		dataType: int64
+		isKey
+		lineageTag: 21010bfb-cdf2-437e-b468-d92adfa3db42
+		summarizeBy: none
+		sourceColumn: geocode
+
+	column municipio
+		dataType: string
+		lineageTag: a52abbc5-d428-4a64-a754-7978e4afc0d3
+		summarizeBy: none
+		sourceColumn: municipio
+		sortByColumn: ordem
+
+	column uf
+		dataType: string
+		lineageTag: 4996ff0b-b944-4d00-9372-c5431594516a
+		summarizeBy: none
+		sourceColumn: uf
+
+	column regiao
+		dataType: string
+		lineageTag: 5b506e6e-ff9d-4130-b8c1-2109106bfd85
+		summarizeBy: none
+		sourceColumn: regiao
+
+	column local_mapa
+		dataType: string
+		lineageTag: 04e3ee91-76c4-4547-bfd7-222d26b56da6
+		dataCategory: Place
+		summarizeBy: none
+		sourceColumn: local_mapa
+
+	column populacao
+		dataType: double
+		formatString: #,0
+		lineageTag: a5f925cf-ac88-4e12-ae9e-199562d94aa3
+		summarizeBy: none
+		sourceColumn: populacao
+
+	column limiar_casos
+		dataType: double
+		formatString: #,0
+		lineageTag: 1d22bd0b-aa6f-436d-a802-bae8ee247f35
+		summarizeBy: none
+		sourceColumn: limiar_casos
+
+	column limiar_incidencia
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 088653c0-b1cd-4c65-8d1f-bf2c06584934
+		summarizeBy: none
+		sourceColumn: limiar_incidencia
+
+	column base_limiar
+		dataType: string
+		lineageTag: 566ce768-f44d-4a0d-be2d-84eefc65e68c
+		summarizeBy: none
+		sourceColumn: base_limiar
+
+	column ordem
+		dataType: int64
+		lineageTag: 35d74fce-0a60-46c2-97d8-28dc54c3b553
+		summarizeBy: none
+		sourceColumn: ordem
+
+	partition dim_municipio = m
+		mode: import
+		source =
+				let
+				    Fonte = LerTabela("dim_municipio")
+				in
+				    Fonte
+

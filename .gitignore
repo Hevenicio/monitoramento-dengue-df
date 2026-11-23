@@ -1,0 +1,38 @@
+# Chave da API (nunca versionar)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Dados baixados da API: regenerados por `python -m dengue_df ingerir`
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Saídas: só as tabelas finais vão para o repositório (para o Power BI e o Streamlit
+# abrirem sem a chave da API). Prévias PNG e logs ficam locais.
+outputs/*
+!outputs/*.parquet
+!outputs/metadata.json
+!outputs/powerbi/
+outputs/powerbi/*
+!outputs/powerbi/*.parquet
+
+# Power BI Project: cache de dados e configurações da máquina
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Editores e sistema operacional
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

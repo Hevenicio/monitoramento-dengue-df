@@ -1,0 +1,69 @@
+relationship obs_municipio
+	fromColumn: fato_observado.geocode
+	toColumn: dim_municipio.geocode
+
+relationship prev_municipio
+	fromColumn: fato_previsao.geocode
+	toColumn: dim_municipio.geocode
+
+relationship bt_municipio
+	fromColumn: fato_backtest.geocode
+	toColumn: dim_municipio.geocode
+
+relationship obs_semana
+	fromColumn: fato_observado.inicio_semana
+	toColumn: dim_semana.inicio_semana
+
+relationship prev_semana
+	fromColumn: fato_previsao.semana_alvo
+	toColumn: dim_semana.inicio_semana
+
+relationship bt_semana
+	fromColumn: fato_backtest.semana_alvo
+	toColumn: dim_semana.inicio_semana
+
+relationship prev_modelo
+	fromColumn: fato_previsao.modelo
+	toColumn: dim_modelo.modelo
+
+relationship bt_modelo
+	fromColumn: fato_backtest.modelo
+	toColumn: dim_modelo.modelo
+
+relationship resumo_modelo
+	fromColumn: fato_resumo.modelo
+	toColumn: dim_modelo.modelo
+
+relationship cobertura_modelo
+	fromColumn: fato_cobertura.modelo
+	toColumn: dim_modelo.modelo
+
+relationship confiab_modelo
+	fromColumn: fato_confiabilidade.modelo
+	toColumn: dim_modelo.modelo
+
+relationship f2b1cd85-40d8-4d91-8966-536824340d10
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_semana.inicio_semana
+	toColumn: LocalDateTable_12b8cde8-1aaa-40f5-86f6-a218c70b6acb.Date
+
+relationship 4c30697e-e79b-4011-a301-983d8a3d3c95
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_semana.fim_semana
+	toColumn: LocalDateTable_686ff7e1-e19a-4024-b275-c60bc5f61861.Date
+
+relationship 006fe7f7-0be8-458a-9103-3820cca2e5b9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fato_backtest.origem
+	toColumn: LocalDateTable_0bff280b-816c-42b8-b160-9cfc5f913eb3.Date
+
+relationship 6ac738fa-3d0d-4c99-9eab-7f079495eae2
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fato_previsao.origem
+	toColumn: LocalDateTable_ea48d9aa-4369-45f6-8bc9-40da52ebe9c7.Date
+
+relationship 343b20ad-80a2-45d5-a1f2-741b561f62cf
+	joinOnDateBehavior: datePartOnly
+	fromColumn: info_execucao.ultima_semana
+	toColumn: LocalDateTable_aa1fba3b-a511-44b1-b828-a9f49bb701af.Date
+
