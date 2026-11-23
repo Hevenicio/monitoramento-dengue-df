@@ -203,4 +203,4 @@ Código sob a licença MIT. Veja [LICENSE](LICENSE).
 
 ## Autor
 
-Hevenicio Silva · [github.com/Hevenicio](https://github.com/Hevenicio)
+Hevenicio Silva · [hevenicio.dev](https://hevenicio.dev) · [github.com/Hevenicio](https://github.com/Hevenicio)
